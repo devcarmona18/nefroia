@@ -6,7 +6,7 @@ import {
   getVotesByChatId,
   voteMessage,
 } from "@/lib/db/queries";
-import { ChatbotError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 
 const voteSchema = z.object({
   chatId: z.string(),
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const chatId = searchParams.get("chatId");
 
   if (!chatId) {
-    return new ChatbotError(
+    return new AppError(
       "bad_request:api",
       "Parameter chatId is required."
     ).toResponse();
@@ -28,17 +28,17 @@ export async function GET(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return new ChatbotError("unauthorized:vote").toResponse();
+    return new AppError("unauthorized:vote").toResponse();
   }
 
   const chat = await getChatById({ id: chatId });
 
   if (!chat) {
-    return new ChatbotError("not_found:chat").toResponse();
+    return new AppError("not_found:chat").toResponse();
   }
 
   if (chat.userId !== session.user.id) {
-    return new ChatbotError("forbidden:vote").toResponse();
+    return new AppError("forbidden:vote").toResponse();
   }
 
   const votes = await getVotesByChatId({ id: chatId });
@@ -54,7 +54,7 @@ export async function PATCH(request: Request) {
   try {
     ({ chatId, messageId, type } = voteSchema.parse(await request.json()));
   } catch {
-    return new ChatbotError(
+    return new AppError(
       "bad_request:api",
       "Parameters chatId, messageId, and type are required."
     ).toResponse();
@@ -63,23 +63,23 @@ export async function PATCH(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return new ChatbotError("unauthorized:vote").toResponse();
+    return new AppError("unauthorized:vote").toResponse();
   }
 
   const chat = await getChatById({ id: chatId });
 
   if (!chat) {
-    return new ChatbotError("not_found:vote").toResponse();
+    return new AppError("not_found:vote").toResponse();
   }
 
   if (chat.userId !== session.user.id) {
-    return new ChatbotError("forbidden:vote").toResponse();
+    return new AppError("forbidden:vote").toResponse();
   }
 
   const [message] = await getMessageById({ id: messageId });
 
   if (!message || message.chatId !== chatId) {
-    return new ChatbotError("not_found:vote").toResponse();
+    return new AppError("not_found:vote").toResponse();
   }
 
   await voteMessage({

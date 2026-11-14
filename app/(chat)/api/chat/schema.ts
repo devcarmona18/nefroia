@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { ALLOWED_UPLOAD_TYPES } from "@/lib/storage/file-validation";
+import { keyFromAppFileUrl } from "@/lib/storage/keys";
 
 const textPartSchema = z.object({
   text: z.string().min(1).max(2000),
@@ -6,10 +8,14 @@ const textPartSchema = z.object({
 });
 
 const filePartSchema = z.object({
-  mediaType: z.enum(["image/jpeg", "image/png"]),
+  mediaType: z.enum(ALLOWED_UPLOAD_TYPES),
   name: z.string().min(1).max(100),
   type: z.enum(["file"]),
-  url: z.url(),
+  // Solo se aceptan URLs internas generadas por /api/files/upload.
+  url: z
+    .string()
+    .max(2048)
+    .refine((value) => keyFromAppFileUrl(value) !== null),
 });
 
 const partSchema = z.union([textPartSchema, filePartSchema]);

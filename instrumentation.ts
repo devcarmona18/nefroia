@@ -1,8 +1,21 @@
-import { OpenTelemetry } from "@ai-sdk/otel";
-import { registerOTel } from "@vercel/otel";
-import { registerTelemetry } from "ai";
+/**
+ * Hook de arranque de Next.js. Valida la configuración mínima y, de forma
+ * opcional, activa OpenTelemetry genérico (OTLP) si se define
+ * `OTEL_EXPORTER_OTLP_ENDPOINT`.
+ */
+export async function register() {
+  if (process.env.NEXT_RUNTIME !== "nodejs") {
+    return;
+  }
 
-export function register() {
-  registerOTel({ serviceName: "chatbot" });
-  registerTelemetry(new OpenTelemetry());
+  const { validateEnv } = await import("./lib/env");
+  validateEnv();
+
+  if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+    const { registerTelemetry } = await import("ai");
+    const { OpenTelemetry } = await import("@ai-sdk/otel");
+    const { registerOtel } = await import("./lib/otel");
+    registerOtel(process.env.OTEL_SERVICE_NAME ?? "nefroia");
+    registerTelemetry(new OpenTelemetry());
+  }
 }

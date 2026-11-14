@@ -1,23 +1,13 @@
-import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
-const basePath = process.env.IS_DEMO === "1" ? "/demo" : "";
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+// Subruta opcional (p. ej. "/nefroia") si la app se sirve detrás de un proxy.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const nextConfig: NextConfig = {
-  ...(basePath
-    ? {
-        assetPrefix: "/demo-assets",
-        basePath,
-        redirects: async () => [
-          {
-            basePath: false,
-            destination: basePath,
-            permanent: false,
-            source: "/",
-          },
-        ],
-      }
-    : {}),
+  ...(basePath ? { basePath } : {}),
   cacheComponents: true,
   devIndicators: false,
   env: {
@@ -30,25 +20,16 @@ const nextConfig: NextConfig = {
     prefetchInlining: true,
     turbopackFileSystemCacheForDev: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        hostname: "avatar.vercel.sh",
-      },
-      {
-        hostname: "*.public.blob.vercel-storage.com",
-        protocol: "https",
-      },
-    ],
-  },
   logging: {
     fetches: {
       fullUrl: false,
     },
     incomingRequests: false,
   },
+  // Imagen Docker mínima: genera .next/standalone con solo lo necesario.
+  output: "standalone",
   poweredByHeader: false,
   reactCompiler: true,
 };
 
-export default withBotId(nextConfig);
+export default withNextIntl(nextConfig);

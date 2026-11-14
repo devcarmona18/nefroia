@@ -1,20 +1,12 @@
-import { getAllGatewayModels, getCapabilities, isDemo } from "@/lib/ai/models";
+import { getCapabilities } from "@/lib/ai/models";
+import { getEnabledModels } from "@/lib/ai/providers";
 
-export async function GET() {
-  const headers = {
-    "Cache-Control": "public, max-age=86400, s-maxage=86400",
-  };
+/** Modelos habilitados (según las API keys configuradas) y sus capacidades. */
+export function GET() {
+  const models = getEnabledModels();
 
-  const curatedCapabilities = await getCapabilities();
-
-  if (isDemo) {
-    const models = await getAllGatewayModels();
-    const capabilities = Object.fromEntries(
-      models.map((m) => [m.id, curatedCapabilities[m.id] ?? m.capabilities])
-    );
-
-    return Response.json({ capabilities, models }, { headers });
-  }
-
-  return Response.json(curatedCapabilities, { headers });
+  return Response.json(
+    { capabilities: getCapabilities(models), models },
+    { headers: { "Cache-Control": "private, max-age=300" } }
+  );
 }

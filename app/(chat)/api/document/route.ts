@@ -7,7 +7,7 @@ import {
   saveDocument,
   updateDocumentContent,
 } from "@/lib/db/queries";
-import { ChatbotError } from "@/lib/errors";
+import { AppError } from "@/lib/errors";
 
 const documentSchema = z.object({
   content: z.string(),
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const id = searchParams.get("id");
 
   if (!id) {
-    return new ChatbotError(
+    return new AppError(
       "bad_request:api",
       "Parameter id is missing"
     ).toResponse();
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return new ChatbotError("unauthorized:document").toResponse();
+    return new AppError("unauthorized:document").toResponse();
   }
 
   const documents = await getDocumentsById({ id });
@@ -38,11 +38,11 @@ export async function GET(request: Request) {
   const [document] = documents;
 
   if (!document) {
-    return new ChatbotError("not_found:document").toResponse();
+    return new AppError("not_found:document").toResponse();
   }
 
   if (document.userId !== session.user.id) {
-    return new ChatbotError("forbidden:document").toResponse();
+    return new AppError("forbidden:document").toResponse();
   }
 
   return Response.json(documents, { status: 200 });
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   const id = searchParams.get("id");
 
   if (!id) {
-    return new ChatbotError(
+    return new AppError(
       "bad_request:api",
       "Parameter id is required."
     ).toResponse();
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return new ChatbotError("not_found:document").toResponse();
+    return new AppError("not_found:document").toResponse();
   }
 
   let content: string;
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       await request.json()
     ));
   } catch {
-    return new ChatbotError(
+    return new AppError(
       "bad_request:api",
       "Invalid request body."
     ).toResponse();
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     const [doc] = documents;
 
     if (doc.userId !== session.user.id) {
-      return new ChatbotError("forbidden:document").toResponse();
+      return new AppError("forbidden:document").toResponse();
     }
   }
 
@@ -113,14 +113,14 @@ export async function DELETE(request: Request) {
   const timestamp = searchParams.get("timestamp");
 
   if (!id) {
-    return new ChatbotError(
+    return new AppError(
       "bad_request:api",
       "Parameter id is required."
     ).toResponse();
   }
 
   if (!timestamp) {
-    return new ChatbotError(
+    return new AppError(
       "bad_request:api",
       "Parameter timestamp is required."
     ).toResponse();
@@ -129,7 +129,7 @@ export async function DELETE(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return new ChatbotError("unauthorized:document").toResponse();
+    return new AppError("unauthorized:document").toResponse();
   }
 
   const documents = await getDocumentsById({ id });
@@ -137,16 +137,13 @@ export async function DELETE(request: Request) {
   const [document] = documents;
 
   if (document.userId !== session.user.id) {
-    return new ChatbotError("forbidden:document").toResponse();
+    return new AppError("forbidden:document").toResponse();
   }
 
   const parsedTimestamp = new Date(timestamp);
 
   if (Number.isNaN(parsedTimestamp.getTime())) {
-    return new ChatbotError(
-      "bad_request:api",
-      "Invalid timestamp."
-    ).toResponse();
+    return new AppError("bad_request:api", "Invalid timestamp.").toResponse();
   }
 
   const documentsDeleted = await deleteDocumentsByIdAfterTimestamp({

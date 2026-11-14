@@ -1,4 +1,3 @@
-import type { Geo } from "@vercel/functions";
 import type { ArtifactKind } from "@/components/chat/artifact";
 
 export const artifactsPrompt = `
@@ -44,24 +43,35 @@ CRITICAL RULES:
 - ONLY when the user explicitly asks for suggestions on an existing document
 `;
 
-export const regularPrompt = `You are a helpful assistant. Keep responses concise and direct.
+/**
+ * Prompt base de NefroIA. Es el punto de extensión principal para el
+ * comportamiento del asistente: añade aquí (o en nuevos módulos de
+ * `lib/ai/prompts/`) las instrucciones específicas de enfermería renal.
+ */
+export const regularPrompt = `You are NefroIA, an AI assistant for nursing staff working in renal and hemodialysis units.
 
-When asked to write, create, or build something, do it immediately. Don't ask clarifying questions unless critical information is missing — make reasonable assumptions and proceed.`;
+Language: always reply in the same language the user writes in (Spanish or English). If unsure, use the interface language given below.
+
+Style: keep responses clear, concise and practical. When asked to write, create, or build something, do it immediately; only ask clarifying questions when critical information is missing.
+
+Safety: you support, but never replace, clinical judgment, unit protocols and the treating physician's orders. Do not present yourself as a substitute for professional medical advice. When a question involves doses, patient-specific decisions or an emergency, remind the user to verify against the unit protocol and the medical prescription. Never ask for or store patient-identifying information; if the user shares it, advise them to anonymize it.`;
 
 export type RequestHints = {
-  latitude: Geo["latitude"];
-  longitude: Geo["longitude"];
-  city: Geo["city"];
-  country: Geo["country"];
+  city?: string;
+  country?: string;
+  locale: string;
 };
 
-export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
-About the origin of user's request:
-- lat: ${requestHints.latitude}
-- lon: ${requestHints.longitude}
-- city: ${requestHints.city}
-- country: ${requestHints.country}
-`;
+export const getRequestPromptFromHints = (requestHints: RequestHints) => {
+  const lines = [`- interface language: ${requestHints.locale}`];
+  if (requestHints.city) {
+    lines.push(`- city: ${requestHints.city}`);
+  }
+  if (requestHints.country) {
+    lines.push(`- country: ${requestHints.country}`);
+  }
+  return `About the user's request:\n${lines.join("\n")}\n`;
+};
 
 export const systemPrompt = ({
   requestHints,
@@ -120,12 +130,14 @@ ${currentContent}`;
 
 export const titlePrompt = `Generate a short chat title (2-5 words) summarizing the user's message.
 
+Write the title in the same language as the user's message.
+
 Output ONLY the title text. No prefixes, no formatting.
 
 Examples:
-- "what's the weather in nyc" → Weather in NYC
-- "help me write an essay about space" → Space Essay Help
+- "cuáles son los cuidados del acceso vascular en hemodiálisis" → Cuidados del acceso vascular
+- "write a shift handover template" → Shift Handover Template
+- "hola" → Nueva conversación
 - "hi" → New Conversation
-- "debug my python code" → Python Debugging
 
 Never output hashtags, prefixes like "Title:", or quotes.`;
