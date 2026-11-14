@@ -85,6 +85,7 @@ export function sanitizeFilename(name: string, extension: string): string {
     .normalize("NFKD")
     .replace(/[^a-zA-Z0-9_-]/g, "_")
     .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
     .slice(0, 60);
   return `${base || "archivo"}.${extension}`;
 }

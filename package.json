@@ -1,22 +1,40 @@
 {
-  "name": "chatbot",
-  "version": "3.1.0",
+  "name": "nefroia",
+  "version": "1.0.0",
+  "description": "NefroIA: asistente de IA para enfermería renal / AI assistant for renal nursing",
   "private": true,
+  "license": "Apache-2.0",
+  "author": "David Carmona",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devcarmona18/nefroia.git"
+  },
+  "homepage": "https://github.com/devcarmona18/nefroia#readme",
+  "bugs": {
+    "url": "https://github.com/devcarmona18/nefroia/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "tsx lib/db/migrate && next build",
+    "build": "next build",
     "start": "next start",
     "check": "ultracite check",
     "fix": "ultracite fix",
+    "typecheck": "tsc --noEmit",
     "prepare": "husky",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "npx tsx lib/db/migrate.ts",
+    "db:migrate": "tsx lib/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "cross-env PLAYWRIGHT=True playwright test",
+    "test": "pnpm test:unit && pnpm test:e2e"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.104",
