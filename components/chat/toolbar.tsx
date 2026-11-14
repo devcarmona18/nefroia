@@ -4,6 +4,7 @@ import cx from "classnames";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { WrenchIcon, XIcon } from "lucide-react";
 import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
 import {
   type Dispatch,
   isValidElement,
@@ -24,7 +25,10 @@ import {
 } from "@/components/ui/tooltip";
 import type { ChatMessage } from "@/lib/types";
 import { type ArtifactKind, artifactDefinitions } from "./artifact";
-import type { ArtifactToolbarItem } from "./create-artifact";
+import type {
+  ArtifactToolbarContext,
+  ArtifactToolbarItem,
+} from "./create-artifact";
 import { ArrowUpIcon, StopIcon, SummarizeIcon } from "./icons";
 
 type ToolProps = {
@@ -36,21 +40,8 @@ type ToolProps = {
   setIsToolbarVisible?: Dispatch<SetStateAction<boolean>>;
   isAnimating: boolean;
   sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
-  onClick: ({
-    sendMessage,
-  }: {
-    sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
-  }) => void;
+  onClick: ({ sendMessage, t }: ArtifactToolbarContext) => void;
 };
-
-const READING_LEVELS = [
-  "Elementary",
-  "Middle School",
-  "Keep current level",
-  "High School",
-  "College",
-  "Graduate",
-];
 
 const Tool = ({
   description,
@@ -63,6 +54,7 @@ const Tool = ({
   sendMessage,
   onClick,
 }: ToolProps) => {
+  const t = useTranslations("artifact");
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
@@ -85,7 +77,10 @@ const Tool = ({
 
     if (selectedTool === description) {
       setSelectedTool(null);
-      onClick({ sendMessage });
+      onClick({
+        sendMessage,
+        t: (key, values) => t(key as never, values as never),
+      });
     } else {
       setSelectedTool(description);
     }
@@ -97,6 +92,7 @@ const Tool = ({
     sendMessage,
     setIsToolbarVisible,
     setSelectedTool,
+    t,
   ]);
 
   const handleHoverEnd = useCallback(() => {
@@ -151,7 +147,7 @@ const Tool = ({
         side="left"
         sideOffset={16}
       >
-        {description}
+        {t(`toolbar.${description}`)}
       </TooltipContent>
     </Tooltip>
   );
@@ -168,6 +164,8 @@ const ReadingLevelSelector = ({
   isAnimating: boolean;
   sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
 }) => {
+  const t = useTranslations("artifact");
+  const readingLevels = t.raw("readingLevels") as string[];
   const y = useMotionValue(-40 * 2);
   const dragConstraints = 5 * 40 + 2;
   const yToLevel = useTransform(y, [0, -dragConstraints], [0, 5]);
@@ -190,7 +188,9 @@ const ReadingLevelSelector = ({
       sendMessage({
         parts: [
           {
-            text: `Please adjust the reading level to ${READING_LEVELS[currentLevel]} level.`,
+            text: t("messages.adjustReadingLevel", {
+              level: readingLevels[currentLevel],
+            }),
             type: "text",
           },
         ],
@@ -199,7 +199,14 @@ const ReadingLevelSelector = ({
 
       setSelectedTool(null);
     }
-  }, [currentLevel, hasUserSelectedLevel, sendMessage, setSelectedTool]);
+  }, [
+    currentLevel,
+    hasUserSelectedLevel,
+    readingLevels,
+    sendMessage,
+    setSelectedTool,
+    t,
+  ]);
 
   const handleDragEnd = useCallback(() => {
     if (currentLevel === 2) {
@@ -259,7 +266,7 @@ const ReadingLevelSelector = ({
             side="left"
             sideOffset={16}
           >
-            {READING_LEVELS[currentLevel]}
+            {readingLevels[currentLevel]}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -305,13 +312,16 @@ const createFixErrorTool = (
   consoleOutput: string,
   documentId?: string
 ): ArtifactToolbarItem => ({
-  description: "Fix error",
+  description: "fixError",
   icon: <WrenchIcon className="size-4" />,
-  onClick: ({ sendMessage: send }) => {
+  onClick: ({ sendMessage: send, t }) => {
     send({
       parts: [
         {
-          text: `Fix the error in the existing script${documentId ? ` (id: ${documentId})` : ""} using updateDocument. Do not create a new script. Console error:\n\n${consoleOutput}`,
+          text: t("messages.fixError", {
+            documentId: documentId ? ` (id: ${documentId})` : "",
+            output: consoleOutput,
+          }),
           type: "text",
         },
       ],

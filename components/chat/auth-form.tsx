@@ -1,4 +1,5 @@
 import Form from "next/form";
+import { useTranslations } from "next-intl";
 
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -14,11 +15,13 @@ export function AuthForm({
   children: React.ReactNode;
   defaultEmail?: string;
 }) {
+  const t = useTranslations("auth");
+
   return (
     <Form action={action} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label className="font-normal text-muted-foreground" htmlFor="email">
-          Email
+          {t("email")}
         </Label>
         <Input
           autoComplete="email"
@@ -27,7 +30,7 @@ export function AuthForm({
           defaultValue={defaultEmail}
           id="email"
           name="email"
-          placeholder="you@someo.ne"
+          placeholder={t("emailPlaceholder")}
           required
           type="email"
         />
@@ -35,7 +38,7 @@ export function AuthForm({
 
       <div className="flex flex-col gap-2">
         <Label className="font-normal text-muted-foreground" htmlFor="password">
-          Password
+          {t("password")}
         </Label>
         <Input
           className="h-10 rounded-lg border-border/50 bg-muted/50 text-sm transition-colors focus:border-foreground/20 focus:bg-muted"

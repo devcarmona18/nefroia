@@ -18,6 +18,7 @@ import {
   WrenchIcon,
   XCircleIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { isValidElement } from "react";
 
 import { CodeBlock } from "./code-block";
@@ -45,14 +46,14 @@ export type ToolHeaderProps = {
     }
 );
 
-const statusLabels: Record<ToolPart["state"], string> = {
-  "approval-requested": "Awaiting Approval",
-  "approval-responded": "Responded",
-  "input-available": "Running",
-  "input-streaming": "Pending",
-  "output-available": "Completed",
-  "output-denied": "Denied",
-  "output-error": "Error",
+const statusKeys: Record<ToolPart["state"], string> = {
+  "approval-requested": "awaitingApproval",
+  "approval-responded": "responded",
+  "input-available": "running",
+  "input-streaming": "pending",
+  "output-available": "completed",
+  "output-denied": "denied",
+  "output-error": "error",
 };
 
 const statusIcons: Record<ToolPart["state"], ReactNode> = {
@@ -65,12 +66,16 @@ const statusIcons: Record<ToolPart["state"], ReactNode> = {
   "output-error": <XCircleIcon className="size-4 text-red-600" />,
 };
 
-export const getStatusBadge = (status: ToolPart["state"]) => (
-  <Badge className="gap-1.5 rounded-full text-xs" variant="secondary">
-    {statusIcons[status]}
-    {statusLabels[status]}
-  </Badge>
-);
+export const StatusBadge = ({ status }: { status: ToolPart["state"] }) => {
+  const t = useTranslations("tool.status");
+
+  return (
+    <Badge className="gap-1.5 rounded-full text-xs" variant="secondary">
+      {statusIcons[status]}
+      {t(statusKeys[status])}
+    </Badge>
+  );
+};
 
 export const ToolHeader = ({
   className,
@@ -80,8 +85,12 @@ export const ToolHeader = ({
   toolName,
   ...props
 }: ToolHeaderProps) => {
+  const t = useTranslations("tool");
   const derivedName =
     type === "dynamic-tool" ? toolName : type.split("-").slice(1).join("-");
+  const displayName = t.has(`names.${derivedName}`)
+    ? t(`names.${derivedName}`)
+    : derivedName;
 
   return (
     <CollapsibleTrigger
@@ -93,8 +102,8 @@ export const ToolHeader = ({
     >
       <div className="flex items-center gap-2">
         <WrenchIcon className="size-4 text-muted-foreground" />
-        <span className="font-medium text-sm">{title ?? derivedName}</span>
-        {getStatusBadge(state)}
+        <span className="font-medium text-sm">{title ?? displayName}</span>
+        <StatusBadge status={state} />
       </div>
       <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
     </CollapsibleTrigger>
@@ -117,16 +126,20 @@ export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
-export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
+export const ToolInput = ({ className, input, ...props }: ToolInputProps) => {
+  const t = useTranslations("tool");
+
+  return (
   <div className={cn("space-y-2 overflow-hidden", className)} {...props}>
     <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-      Parameters
+      {t("parameters")}
     </h4>
     <div className="rounded-md bg-muted/50">
       <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
     </div>
   </div>
-);
+  );
+};
 
 export type ToolOutputProps = ComponentProps<"div"> & {
   output: ToolPart["output"];
@@ -139,6 +152,8 @@ export const ToolOutput = ({
   errorText,
   ...props
 }: ToolOutputProps) => {
+  const t = useTranslations("tool");
+
   if (!(output || errorText)) {
     return null;
   }
@@ -156,7 +171,7 @@ export const ToolOutput = ({
   return (
     <div className={cn("space-y-2", className)} {...props}>
       <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-        {errorText ? "Error" : "Result"}
+        {errorText ? t("error") : t("result")}
       </h4>
       <div
         className={cn(

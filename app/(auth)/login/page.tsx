@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useState } from "react";
 
 import { AuthForm } from "@/components/chat/auth-form";
@@ -11,6 +12,7 @@ import { toast } from "@/components/chat/toast";
 import { type LoginActionState, login } from "../actions";
 
 export default function Page() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isSuccessful, setIsSuccessful] = useState(false);
@@ -25,12 +27,14 @@ export default function Page() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
     if (state.status === "failed") {
-      toast({ description: "Invalid credentials!", type: "error" });
+      toast({ description: t("toasts.invalidCredentials"), type: "error" });
     } else if (state.status === "invalid_data") {
       toast({
-        description: "Failed validating your submission!",
+        description: t("toasts.invalidData"),
         type: "error",
       });
+    } else if (state.status === "rate_limited") {
+      toast({ description: t("toasts.rateLimited"), type: "error" });
     } else if (state.status === "success") {
       setIsSuccessful(true);
       updateSession();
@@ -45,19 +49,21 @@ export default function Page() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-      <p className="text-sm text-muted-foreground">
-        Sign in to your account to continue
-      </p>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        {t("login.title")}
+      </h1>
+      <p className="text-sm text-muted-foreground">{t("login.subtitle")}</p>
       <AuthForm action={handleSubmit} defaultEmail={email}>
-        <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+        <SubmitButton isSuccessful={isSuccessful}>
+          {t("login.submit")}
+        </SubmitButton>
         <p className="text-center text-[13px] text-muted-foreground">
-          {"No account? "}
+          {`${t("login.noAccount")} `}
           <Link
             className="text-foreground underline-offset-4 hover:underline"
             href="/register"
           >
-            Sign up
+            {t("login.signUpLink")}
           </Link>
         </p>
       </AuthForm>

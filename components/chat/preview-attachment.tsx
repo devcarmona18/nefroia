@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import type { Attachment } from "@/lib/types";
 import { Spinner } from "../ui/spinner";
 import { CrossSmallIcon } from "./icons";
@@ -12,6 +13,7 @@ export const PreviewAttachment = ({
   isUploading?: boolean;
   onRemove?: () => void;
 }) => {
+  const t = useTranslations("input");
   const { name, url, contentType } = attachment;
 
   return (
@@ -21,15 +23,16 @@ export const PreviewAttachment = ({
     >
       {contentType?.startsWith("image") ? (
         <Image
-          alt={name ?? "attachment"}
+          alt={name ?? t("attachmentAlt")}
           className="size-full object-cover"
           height={96}
           src={url}
+          unoptimized
           width={96}
         />
       ) : (
         <div className="flex size-full items-center justify-center text-muted-foreground text-xs">
-          File
+          {contentType === "application/pdf" ? "PDF" : t("file")}
         </div>
       )}
 
@@ -44,6 +47,7 @@ export const PreviewAttachment = ({
 
       {onRemove && !isUploading && (
         <button
+          aria-label={t("removeAttachment")}
           className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity hover:bg-black/80 group-hover:opacity-100"
           onClick={onRemove}
           type="button"

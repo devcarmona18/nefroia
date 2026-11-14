@@ -3,6 +3,7 @@
 import { isAfter } from "date-fns";
 import { motion } from "framer-motion";
 import { ChevronLeftIcon, ChevronRightIcon, DiffIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useState } from "react";
 import { useSWRConfig } from "swr";
@@ -26,6 +27,7 @@ export const VersionFooter = ({
   mode,
   setMode,
 }: VersionFooterProps) => {
+  const t = useTranslations("artifact");
   const { artifact } = useArtifact();
 
   const { mutate } = useSWRConfig();
@@ -109,6 +111,7 @@ export const VersionFooter = ({
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1">
           <button
+            aria-label={t("actions.viewPrevious")}
             className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
             disabled={isFirst}
             onClick={handlePrevious}
@@ -117,9 +120,13 @@ export const VersionFooter = ({
             <ChevronLeftIcon className="size-4" />
           </button>
           <span className="min-w-[4rem] text-center text-xs tabular-nums text-muted-foreground">
-            {currentVersionIndex + 1} of {documents.length}
+            {t("versionOf", {
+              current: currentVersionIndex + 1,
+              total: documents.length,
+            })}
           </span>
           <button
+            aria-label={t("actions.viewNext")}
             className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
             disabled={isLast}
             onClick={handleNext}
@@ -130,12 +137,13 @@ export const VersionFooter = ({
         </div>
 
         <button
+          aria-label={t("actions.viewChanges")}
           className={cn(
             "flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
             mode === "diff" && "bg-muted text-foreground"
           )}
           onClick={handleToggleMode}
-          title="Show changes"
+          title={t("actions.viewChanges")}
           type="button"
         >
           <DiffIcon className="size-4" />
@@ -149,7 +157,7 @@ export const VersionFooter = ({
           onClick={handleRestore}
           type="button"
         >
-          Restore
+          {t("restore")}
           {isMutating ? (
             <div className="animate-spin">
               <LoaderIcon size={14} />
@@ -161,7 +169,7 @@ export const VersionFooter = ({
           onClick={handleLatest}
           type="button"
         >
-          Latest
+          {t("latest")}
         </button>
       </div>
     </motion.div>

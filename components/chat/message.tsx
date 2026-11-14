@@ -1,5 +1,6 @@
 "use client";
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
@@ -13,18 +14,19 @@ import {
   ToolInput,
   ToolOutput,
 } from "../ai-elements/tool";
+import { Logo } from "../brand/logo";
 import { useDataStream } from "./data-stream-provider";
 import { DocumentToolResult } from "./document";
 import { DocumentPreview } from "./document-preview";
-import { SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { Weather } from "./weather";
 
 function WaitingText() {
+  const t = useTranslations("message");
   const { waitingStatus } = useDataStream();
-  const waitingText = waitingStatus?.message ?? "Waiting...";
+  const waitingText = waitingStatus?.message ?? t("waiting");
 
   return (
     <div className="flex min-h-[calc(13px*1.65)] min-w-0 items-center text-[13px] leading-[1.65]">
@@ -46,11 +48,12 @@ function ToolApprovalActions({
   addToolApprovalResponse: UseChatHelpers<ChatMessage>["addToolApprovalResponse"];
   approvalId: string;
 }) {
+  const t = useTranslations("message");
   const handleDeny = useCallback(() => {
     addToolApprovalResponse({
       approved: false,
       id: approvalId,
-      reason: "User denied weather lookup",
+      reason: "User denied the tool call",
     });
   }, [addToolApprovalResponse, approvalId]);
 
@@ -68,14 +71,14 @@ function ToolApprovalActions({
         onClick={handleDeny}
         type="button"
       >
-        Deny
+        {t("deny")}
       </button>
       <button
         className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-sm transition-colors hover:bg-primary/90"
         onClick={handleAllow}
         type="button"
       >
-        Allow
+        {t("allow")}
       </button>
     </div>
   );
@@ -104,6 +107,7 @@ const PurePreviewMessage = ({
   requiresScrollPadding: boolean;
   onEdit?: (message: ChatMessage) => void;
 }) => {
+  const t = useTranslations("message");
   const attachmentsFromMessage = message.parts.filter(
     (part) => part.type === "file"
   );
@@ -213,7 +217,7 @@ const PurePreviewMessage = ({
               <ToolHeader state="output-denied" type="tool-getWeather" />
               <ToolContent>
                 <div className="px-4 py-3 text-muted-foreground text-sm">
-                  Weather lookup was denied.
+                  {t("weatherDenied")}
                 </div>
               </ToolContent>
             </Tool>
@@ -264,7 +268,7 @@ const PurePreviewMessage = ({
             className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
             key={toolCallId}
           >
-            Error creating document: {String(part.output.error)}
+            {t("errorCreating")}: {String(part.output.error)}
           </div>
         );
       }
@@ -287,7 +291,7 @@ const PurePreviewMessage = ({
             className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
             key={toolCallId}
           >
-            Error updating document: {String(part.output.error)}
+            {t("errorUpdating")}: {String(part.output.error)}
           </div>
         );
       }
@@ -321,7 +325,7 @@ const PurePreviewMessage = ({
                 output={
                   "error" in part.output ? (
                     <div className="rounded border p-2 text-red-500">
-                      Error: {String(part.output.error)}
+                      {t("error")}: {String(part.output.error)}
                     </div>
                   ) : (
                     <DocumentToolResult
@@ -379,7 +383,7 @@ const PurePreviewMessage = ({
         {isAssistant && (
           <div className="flex h-[calc(13px*1.65)] shrink-0 items-center">
             <div className="flex size-7 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground ring-1 ring-border/50">
-              <SparklesIcon size={13} />
+              <Logo size={16} />
             </div>
           </div>
         )}
@@ -404,7 +408,7 @@ export const ThinkingMessage = () => (
     <div className="flex items-start gap-3">
       <div className="flex h-[calc(13px*1.65)] shrink-0 items-center">
         <div className="flex size-7 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground ring-1 ring-border/50">
-          <SparklesIcon size={13} />
+          <Logo size={16} />
         </div>
       </div>
 

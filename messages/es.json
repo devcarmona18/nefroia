@@ -1,0 +1,309 @@
+{
+  "metadata": {
+    "title": "NefroIA — Asistente de IA para enfermería renal",
+    "description": "Asistente de IA para enfermería renal"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
+  },
+  "auth": {
+    "back": "Volver",
+    "tagline": "Asistente de IA para enfermería renal",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "emailPlaceholder": "tu@correo.com",
+    "submit": {
+      "loading": "Cargando",
+      "idle": "Enviar formulario"
+    },
+    "login": {
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Inicia sesión en tu cuenta para continuar",
+      "submit": "Iniciar sesión",
+      "noAccount": "¿No tienes cuenta?",
+      "signUpLink": "Regístrate"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "subtitle": "Empieza gratis",
+      "submit": "Registrarme",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "signInLink": "Inicia sesión"
+    },
+    "toasts": {
+      "invalidCredentials": "Credenciales incorrectas.",
+      "invalidData": "Datos no válidos: usa un correo válido y una contraseña de al menos 8 caracteres.",
+      "rateLimited": "Demasiados intentos. Inténtalo de nuevo en unos minutos.",
+      "accountExists": "Ya existe una cuenta con ese correo.",
+      "createFailed": "No se pudo crear la cuenta.",
+      "accountCreated": "Cuenta creada."
+    }
+  },
+  "sidebar": {
+    "newChat": "Nuevo chat",
+    "newChatTooltip": "Nuevo chat",
+    "deleteAll": "Borrar todo",
+    "deleteAllTooltip": "Borrar todos los chats",
+    "openSidebar": "Abrir barra lateral",
+    "toggleSidebar": "Mostrar u ocultar la barra lateral",
+    "cancel": "Cancelar",
+    "deleteAllTitle": "¿Borrar todos los chats?",
+    "deleteAllDescription": "Esta acción no se puede deshacer. Se eliminarán de forma permanente todos tus chats.",
+    "deleteAllConfirm": "Borrar todo",
+    "allChatsDeleted": "Todos los chats se borraron"
+  },
+  "history": {
+    "title": "Historial",
+    "loginPrompt": "Inicia sesión para guardar y revisar tus chats anteriores.",
+    "empty": "Tus conversaciones aparecerán aquí cuando empieces a chatear.",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "last7": "Últimos 7 días",
+    "last30": "Últimos 30 días",
+    "older": "Anteriores",
+    "loading": "Cargando...",
+    "more": "Más opciones",
+    "share": "Compartir",
+    "private": "Privado",
+    "public": "Público",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "deleteTitle": "¿Eliminar este chat?",
+    "deleteDescription": "Esta acción no se puede deshacer. El chat se eliminará de forma permanente.",
+    "deleteConfirm": "Eliminar",
+    "chatDeleted": "Chat eliminado"
+  },
+  "userNav": {
+    "guest": "Invitado",
+    "loading": "Cargando...",
+    "toggleDark": "Cambiar a modo oscuro",
+    "toggleLight": "Cambiar a modo claro",
+    "login": "Inicia sesión en tu cuenta",
+    "signOut": "Cerrar sesión",
+    "checkingAuth": "Comprobando el estado de la sesión, inténtalo de nuevo."
+  },
+  "visibility": {
+    "private": "Privado",
+    "privateDescription": "Solo tú puedes acceder a este chat",
+    "public": "Público",
+    "publicDescription": "Cualquier persona con el enlace puede acceder a este chat"
+  },
+  "chat": {
+    "greeting": "¿En qué puedo ayudarte hoy?",
+    "greetingSubtitle": "Consulta dudas de enfermería renal, redacta notas o prepara listas de verificación.",
+    "placeholder": "Pregunta lo que necesites...",
+    "scrollToBottom": "Ir al final",
+    "suggestions": [
+      "¿Cuáles son los cuidados de enfermería del acceso vascular (FAV y catéter) durante la hemodiálisis?",
+      "Genera una lista de verificación para preparar la máquina de hemodiálisis antes de iniciar la sesión",
+      "Explícame las complicaciones intradialíticas más frecuentes y cómo actuar ante una hipotensión",
+      "Ayúdame a redactar una nota de enfermería para la entrega de turno de un paciente en hemodiálisis"
+    ]
+  },
+  "chatApi": {
+    "newChatTitle": "Nuevo chat",
+    "streamError": "Ocurrió un error al generar la respuesta. Inténtalo de nuevo.",
+    "status": {
+      "waiting": "Esperando...",
+      "stillWaiting": "Sigo esperando...",
+      "thinking": "Pensando..."
+    }
+  },
+  "input": {
+    "placeholder": "Pregunta lo que necesites...",
+    "editPlaceholder": "Edita tu mensaje...",
+    "editingMessage": "Editando mensaje",
+    "cancel": "Cancelar",
+    "attach": "Adjuntar archivos",
+    "stop": "Detener",
+    "submit": "Enviar",
+    "uploadFiles": "Subir archivos",
+    "pastedImage": "Imagen pegada",
+    "file": "Archivo",
+    "attachmentAlt": "Archivo adjunto",
+    "removeAttachment": "Quitar adjunto",
+    "renameHint": "Para renombrar un chat usa el menú del chat en la barra lateral.",
+    "deleteChatPrompt": "¿Eliminar este chat?",
+    "delete": "Eliminar",
+    "deleteAll": "Borrar todo",
+    "deleteAllPrompt": "¿Borrar todos los chats?",
+    "chatDeleted": "Chat eliminado",
+    "allChatsDeleted": "Todos los chats se borraron",
+    "uploadFailed": "No se pudo subir el archivo. Inténtalo de nuevo.",
+    "uploadFailedMany": "No se pudieron subir los archivos.",
+    "pasteFailed": "No se pudo subir la imagen pegada.",
+    "waitForResponse": "Espera a que el modelo termine su respuesta.",
+    "uploadErrors": {
+      "unauthorized": "Debes iniciar sesión para subir archivos.",
+      "storage_not_configured": "El almacenamiento de archivos no está configurado.",
+      "too_large": "El archivo supera el máximo de 5 MB.",
+      "invalid_type": "Tipo de archivo no permitido: solo imágenes (JPG, PNG, WebP, GIF) y PDF.",
+      "no_file": "No se recibió ningún archivo.",
+      "invalid_request": "Solicitud no válida.",
+      "upload_failed": "Error al subir el archivo."
+    }
+  },
+  "models": {
+    "search": "Buscar modelos...",
+    "supportsTools": "Admite herramientas",
+    "supportsVision": "Admite imágenes",
+    "supportsReasoning": "Admite razonamiento"
+  },
+  "slashCommands": {
+    "heading": "Comandos",
+    "new": "Iniciar un chat nuevo",
+    "clear": "Vaciar el chat actual",
+    "rename": "Renombrar el chat actual",
+    "model": "Cambiar el modelo de IA",
+    "theme": "Alternar modo oscuro/claro",
+    "delete": "Eliminar el chat actual",
+    "purge": "Eliminar todos los chats"
+  },
+  "message": {
+    "waiting": "Esperando...",
+    "deny": "Rechazar",
+    "allow": "Permitir",
+    "weatherDenied": "La consulta del clima fue rechazada.",
+    "errorCreating": "Error al crear el documento",
+    "errorUpdating": "Error al actualizar el documento",
+    "error": "Error",
+    "noTextToCopy": "No hay texto para copiar.",
+    "copied": "Copiado al portapapeles.",
+    "copy": "Copiar",
+    "edit": "Editar",
+    "upvote": "Respuesta útil",
+    "downvote": "Respuesta no útil",
+    "upvoting": "Valorando respuesta...",
+    "upvoted": "Respuesta valorada como útil.",
+    "upvoteFailed": "No se pudo valorar la respuesta.",
+    "downvoting": "Valorando respuesta...",
+    "downvoted": "Respuesta valorada como no útil.",
+    "downvoteFailed": "No se pudo valorar la respuesta."
+  },
+  "document": {
+    "created": "Creado \"{title}\"",
+    "updated": "Actualizado \"{title}\"",
+    "addedSuggestions": "Sugerencias añadidas a \"{title}\"",
+    "creating": "Creando \"{title}\"",
+    "creatingNoTitle": "Creando documento",
+    "updating": "Actualizando \"{description}\"",
+    "updatingNoDescription": "Actualizando documento",
+    "addingSuggestions": "Añadiendo sugerencias al documento",
+    "sharedNotSupported": "Por ahora no se pueden ver archivos en chats compartidos."
+  },
+  "artifact": {
+    "saving": "Guardando...",
+    "generating": "Generando...",
+    "generatingImage": "Generando imagen...",
+    "updated": "Actualizado {time}",
+    "versionOf": "{current} de {total}",
+    "restore": "Restaurar",
+    "latest": "Última",
+    "applySuggestion": "Aplicar",
+    "dismissSuggestion": "Descartar",
+    "actions": {
+      "viewChanges": "Ver cambios",
+      "viewPrevious": "Ver versión anterior",
+      "viewNext": "Ver versión siguiente",
+      "copyToClipboard": "Copiar al portapapeles",
+      "copyCode": "Copiar código al portapapeles",
+      "copyCsv": "Copiar como .csv",
+      "copyImage": "Copiar imagen al portapapeles",
+      "run": "Ejecutar código"
+    },
+    "toolbar": {
+      "addFinalPolish": "Añadir pulido final",
+      "requestSuggestions": "Pedir sugerencias",
+      "addComments": "Añadir comentarios",
+      "addLogs": "Añadir logs",
+      "formatClean": "Dar formato y limpiar datos",
+      "analyzeVisualize": "Analizar y visualizar datos",
+      "fixError": "Corregir error"
+    },
+    "messages": {
+      "addFinalPolish": "Por favor, da un pulido final al texto, revisa la gramática, añade títulos de sección para mejorar la estructura y asegúrate de que todo se lea con fluidez.",
+      "requestSuggestions": "Por favor, añade las sugerencias que tengas para mejorar la redacción.",
+      "addComments": "Añade comentarios al fragmento de código para que se entienda mejor.",
+      "addLogs": "Añade logs al fragmento de código para facilitar la depuración.",
+      "formatClean": "¿Puedes dar formato y limpiar los datos, por favor?",
+      "analyzeVisualize": "¿Puedes analizar y visualizar los datos creando un nuevo artefacto de código en Python, por favor?",
+      "adjustReadingLevel": "Por favor, ajusta el nivel de lectura a: {level}.",
+      "fixError": "Corrige el error del script existente{documentId} usando updateDocument. No crees un script nuevo. Error de la consola:\n\n{output}"
+    },
+    "toasts": {
+      "copied": "Copiado al portapapeles.",
+      "copiedCsv": "CSV copiado al portapapeles.",
+      "copiedImage": "Imagen copiada al portapapeles.",
+      "actionFailed": "No se pudo ejecutar la acción."
+    },
+    "readingLevels": [
+      "Primaria",
+      "Secundaria",
+      "Mantener el nivel actual",
+      "Bachillerato",
+      "Universitario",
+      "Posgrado"
+    ]
+  },
+  "console": {
+    "title": "Consola",
+    "resize": "Cambiar el tamaño de la consola",
+    "clear": "Limpiar la consola",
+    "initializing": "Inicializando...",
+    "output": "salida"
+  },
+  "weather": {
+    "hourlyForecast": "Pronóstico por horas",
+    "now": "Ahora",
+    "high": "Máx",
+    "low": "Mín",
+    "sunrise": "Amanecer",
+    "sunset": "Atardecer"
+  },
+  "reasoning": {
+    "thinking": "Pensando...",
+    "thoughtFewSeconds": "Pensó unos segundos",
+    "thoughtSeconds": "Pensó durante {seconds} segundos"
+  },
+  "tool": {
+    "parameters": "Parámetros",
+    "result": "Resultado",
+    "error": "Error",
+    "status": {
+      "awaitingApproval": "Esperando aprobación",
+      "responded": "Respondido",
+      "running": "En ejecución",
+      "pending": "Pendiente",
+      "completed": "Completado",
+      "denied": "Rechazado",
+      "error": "Error"
+    },
+    "names": {
+      "getWeather": "Consultar el clima",
+      "createDocument": "Crear documento",
+      "updateDocument": "Actualizar documento",
+      "editDocument": "Editar documento",
+      "requestSuggestions": "Pedir sugerencias"
+    }
+  },
+  "errors": {
+    "generic": "Algo salió mal. Inténtalo de nuevo más tarde.",
+    "bad_request_api": "No se pudo procesar la solicitud. Revisa los datos e inténtalo de nuevo.",
+    "unauthorized_auth": "Debes iniciar sesión para continuar.",
+    "forbidden_auth": "Tu cuenta no tiene acceso a esta función.",
+    "rate_limit_chat": "Alcanzaste el límite de mensajes. Vuelve en una hora para seguir chateando.",
+    "not_found_chat": "No se encontró el chat solicitado.",
+    "forbidden_chat": "Este chat pertenece a otro usuario.",
+    "unauthorized_chat": "Inicia sesión para ver este chat.",
+    "offline_chat": "Tenemos problemas para enviar tu mensaje. Revisa tu conexión a internet e inténtalo de nuevo.",
+    "not_found_document": "No se encontró el documento solicitado.",
+    "forbidden_document": "Este documento pertenece a otro usuario.",
+    "unauthorized_document": "Inicia sesión para ver este documento.",
+    "bad_request_document": "La solicitud para crear o actualizar el documento no es válida.",
+    "unauthorized_stream": "Debes iniciar sesión para continuar.",
+    "forbidden_stream": "Este chat pertenece a otro usuario.",
+    "not_found_stream": "No se encontró el chat solicitado."
+  }
+}

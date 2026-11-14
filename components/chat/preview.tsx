@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback } from "react";
-import { suggestions } from "@/lib/constants";
-import { SparklesIcon } from "./icons";
+import { useSuggestions } from "@/hooks/use-suggestions";
+import { Logo } from "../brand/logo";
 
 function PreviewSuggestionButton({
   suggestion,
@@ -28,6 +29,8 @@ function PreviewSuggestionButton({
 }
 
 export function Preview() {
+  const t = useTranslations("chat");
+  const suggestions = useSuggestions();
   const router = useRouter();
 
   const handleAction = useCallback(
@@ -46,18 +49,18 @@ export function Preview() {
     <div className="flex h-full flex-col overflow-hidden rounded-tl-2xl bg-background">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border/20 px-5">
         <div className="flex size-5 items-center justify-center rounded bg-muted/60 ring-1 ring-border/50">
-          <SparklesIcon size={10} />
+          <Logo size={14} />
         </div>
-        <span className="text-[13px] text-muted-foreground">Chatbot</span>
+        <span className="text-[13px] text-muted-foreground">NefroIA</span>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-8">
         <div className="text-center">
           <h2 className="text-xl font-semibold tracking-tight">
-            What can I help with?
+            {t("greeting")}
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Ask a question, write code, or explore ideas.
+            {t("greetingSubtitle")}
           </p>
         </div>
 
@@ -78,7 +81,7 @@ export function Preview() {
           onClick={handleDefaultAction}
           type="button"
         >
-          Ask anything...
+          {t("placeholder")}
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
 import {
@@ -31,6 +32,7 @@ function emailToHue(email: string): number {
 }
 
 export function SidebarUserNav({ user }: { user: User }) {
+  const t = useTranslations("userNav");
   const router = useRouter();
   const { data, status } = useSession();
   const { setTheme, resolvedTheme } = useTheme();
@@ -43,7 +45,7 @@ export function SidebarUserNav({ user }: { user: User }) {
   const handleAuthClick = useCallback(() => {
     if (status === "loading") {
       toast({
-        description: "Checking authentication status, please try again!",
+        description: t("checkingAuth"),
         type: "error",
       });
 
@@ -57,7 +59,7 @@ export function SidebarUserNav({ user }: { user: User }) {
         redirectTo: "/",
       });
     }
-  }, [isGuest, router, status]);
+  }, [isGuest, router, status, t]);
 
   return (
     <SidebarMenu>
@@ -69,7 +71,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 <div className="flex flex-row items-center gap-2">
                   <div className="size-6 animate-pulse rounded-full bg-sidebar-foreground/10" />
                   <span className="animate-pulse rounded-md bg-sidebar-foreground/10 text-transparent text-[13px]">
-                    Loading...
+                    {t("loading")}
                   </span>
                 </div>
                 <div className="animate-spin text-sidebar-foreground/50">
@@ -88,7 +90,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                   }}
                 />
                 <span className="truncate text-[13px]" data-testid="user-email">
-                  {isGuest ? "Guest" : user?.email}
+                  {isGuest ? t("guest") : user?.email}
                 </span>
                 <ChevronUp className="ml-auto size-3.5 text-sidebar-foreground/50" />
               </SidebarMenuButton>
@@ -104,7 +106,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               data-testid="user-nav-item-theme"
               onSelect={handleThemeSelect}
             >
-              {`Toggle ${resolvedTheme === "light" ? "dark" : "light"} mode`}
+              {resolvedTheme === "light" ? t("toggleDark") : t("toggleLight")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
@@ -113,7 +115,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 onClick={handleAuthClick}
                 type="button"
               >
-                {isGuest ? "Login to your account" : "Sign out"}
+                {isGuest ? t("login") : t("signOut")}
               </button>
             </DropdownMenuItem>
           </DropdownMenuContent>

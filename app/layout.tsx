@@ -1,19 +1,46 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
-export const metadata: Metadata = {
-  description: "Next.js chatbot template using the AI SDK.",
-  metadataBase: new URL("https://chat.vercel.ai"),
-  title: "Next.js Chatbot Template",
-};
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.AUTH_URL ??
+  "http://localhost:3000";
 
-export const viewport = {
-  maximumScale: 1,
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  const locale = await getLocale();
+
+  return {
+    applicationName: "NefroIA",
+    description: t("description"),
+    metadataBase: new URL(APP_URL),
+    openGraph: {
+      description: t("description"),
+      locale,
+      siteName: "NefroIA",
+      title: t("title"),
+      type: "website",
+    },
+    title: { default: t("title"), template: "%s · NefroIA" },
+    twitter: {
+      card: "summary_large_image",
+      description: t("description"),
+      title: t("title"),
+    },
+  };
+}
+
+// Sin maximumScale: permitir zoom es un requisito de accesibilidad (WCAG 1.4.4).
+export const viewport: Viewport = {
+  initialScale: 1,
+  width: "device-width",
 };
 
 const geist = Geist({
@@ -48,15 +75,17 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+
   return (
     <html
       className={`${geist.variable} ${geistMono.variable}`}
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
     >
       <head>
@@ -74,11 +103,13 @@ export default function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <SessionProvider
-            basePath={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/auth`}
-          >
-            <TooltipProvider>{children}</TooltipProvider>
-          </SessionProvider>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <SessionProvider
+              basePath={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/auth`}
+            >
+              <TooltipProvider>{children}</TooltipProvider>
+            </SessionProvider>
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>

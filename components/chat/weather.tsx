@@ -2,7 +2,9 @@
 
 import cx from "classnames";
 import { format, isWithinInterval } from "date-fns";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { getDateFnsLocale } from "@/lib/date-locale";
 
 const SunIcon = ({ size = 40 }: { size?: number }) => (
   <svg fill="none" height={size} viewBox="0 0 24 24" width={size}>
@@ -283,6 +285,8 @@ export function Weather({
 }: {
   weatherAtLocation?: WeatherAtLocation;
 }) {
+  const t = useTranslations("weather");
+  const dfLocale = getDateFnsLocale(useLocale());
   const currentHigh = Math.max(
     ...weatherAtLocation.hourly.temperature_2m.slice(0, 24)
   );
@@ -346,7 +350,9 @@ export function Weather({
         <div className="mb-2 flex items-center justify-between">
           <div className="font-medium text-white/80 text-xs">{location}</div>
           <div className="text-white/60 text-xs">
-            {format(new Date(weatherAtLocation.current.time), "MMM d, h:mm a")}
+            {format(new Date(weatherAtLocation.current.time), "PP p", {
+              locale: dfLocale,
+            })}
           </div>
         </div>
 
@@ -370,15 +376,17 @@ export function Weather({
 
           <div className="text-right">
             <div className="font-medium text-white/90 text-xs">
-              H: {n(currentHigh)}°
+              {t("high")}: {n(currentHigh)}°
             </div>
-            <div className="text-white/70 text-xs">L: {n(currentLow)}°</div>
+            <div className="text-white/70 text-xs">
+              {t("low")}: {n(currentLow)}°
+            </div>
           </div>
         </div>
 
         <div className="rounded-xl bg-white/10 p-3 backdrop-blur-sm">
           <div className="mb-2 font-medium text-white/80 text-xs">
-            Hourly Forecast
+            {t("hourlyForecast")}
           </div>
           <div className="flex justify-between gap-1">
             {displayTimes.map((time, index) => {
@@ -397,7 +405,9 @@ export function Weather({
                   key={time}
                 >
                   <div className="font-medium text-white/70 text-xs">
-                    {index === 0 ? "Now" : format(hourTime, "ha")}
+                    {index === 0
+                      ? t("now")
+                      : format(hourTime, "ha", { locale: dfLocale })}
                   </div>
 
                   <div
@@ -420,12 +430,16 @@ export function Weather({
 
         <div className="mt-2 flex justify-between text-white/60 text-xs">
           <div>
-            Sunrise:{" "}
-            {format(new Date(weatherAtLocation.daily.sunrise[0]), "h:mm a")}
+            {t("sunrise")}:{" "}
+            {format(new Date(weatherAtLocation.daily.sunrise[0]), "p", {
+              locale: dfLocale,
+            })}
           </div>
           <div>
-            Sunset:{" "}
-            {format(new Date(weatherAtLocation.daily.sunset[0]), "h:mm a")}
+            {t("sunset")}:{" "}
+            {format(new Date(weatherAtLocation.daily.sunset[0]), "p", {
+              locale: dfLocale,
+            })}
           </div>
         </div>
       </div>

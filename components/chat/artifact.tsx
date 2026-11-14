@@ -2,6 +2,7 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import { formatDistance } from "date-fns";
 import equal from "fast-deep-equal";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLocale, useTranslations } from "next-intl";
 import {
   type Dispatch,
   memo,
@@ -18,6 +19,7 @@ import { imageArtifact } from "@/artifacts/image/client";
 import { sheetArtifact } from "@/artifacts/sheet/client";
 import { textArtifact } from "@/artifacts/text/client";
 import { useArtifact } from "@/hooks/use-artifact";
+import { getDateFnsLocale } from "@/lib/date-locale";
 import type { Document, Vote } from "@/lib/db/schema";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
@@ -87,6 +89,8 @@ function PureArtifact({
   selectedVisibilityType: VisibilityType;
   selectedModelId: string;
 }) {
+  const t = useTranslations("artifact");
+  const locale = useLocale();
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
 
   const {
@@ -341,18 +345,24 @@ function PureArtifact({
                 {isContentDirty ? (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <div className="size-1.5 animate-pulse rounded-full bg-amber-500" />
-                    Saving...
+                    {t("saving")}
                   </div>
                 ) : document ? (
                   <div className="text-xs text-muted-foreground">
-                    {`Updated ${formatDistance(new Date(document.createdAt), new Date(), { addSuffix: true })}`}
+                    {t("updated", {
+                      time: formatDistance(
+                        new Date(document.createdAt),
+                        new Date(),
+                        { addSuffix: true, locale: getDateFnsLocale(locale) }
+                      ),
+                    })}
                   </div>
                 ) : artifact.status === "streaming" ? (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <div className="animate-spin">
                       <LoaderIcon size={12} />
                     </div>
-                    Generating...
+                    {t("generating")}
                   </div>
                 ) : (
                   <div className="h-3 w-24 animate-pulse rounded bg-muted-foreground/10" />

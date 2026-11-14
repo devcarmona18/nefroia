@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useState } from "react";
 import { AuthForm } from "@/components/chat/auth-form";
 import { SubmitButton } from "@/components/chat/submit-button";
@@ -10,6 +11,7 @@ import { toast } from "@/components/chat/toast";
 import { type RegisterActionState, register } from "../actions";
 
 export default function Page() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isSuccessful, setIsSuccessful] = useState(false);
@@ -24,16 +26,18 @@ export default function Page() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
     if (state.status === "user_exists") {
-      toast({ description: "Account already exists!", type: "error" });
+      toast({ description: t("toasts.accountExists"), type: "error" });
     } else if (state.status === "failed") {
-      toast({ description: "Failed to create account!", type: "error" });
+      toast({ description: t("toasts.createFailed"), type: "error" });
     } else if (state.status === "invalid_data") {
       toast({
-        description: "Failed validating your submission!",
+        description: t("toasts.invalidData"),
         type: "error",
       });
+    } else if (state.status === "rate_limited") {
+      toast({ description: t("toasts.rateLimited"), type: "error" });
     } else if (state.status === "success") {
-      toast({ description: "Account created!", type: "success" });
+      toast({ description: t("toasts.accountCreated"), type: "success" });
       setIsSuccessful(true);
       updateSession();
       router.refresh();
@@ -47,17 +51,21 @@ export default function Page() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Create account</h1>
-      <p className="text-sm text-muted-foreground">Get started for free</p>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        {t("register.title")}
+      </h1>
+      <p className="text-sm text-muted-foreground">{t("register.subtitle")}</p>
       <AuthForm action={handleSubmit} defaultEmail={email}>
-        <SubmitButton isSuccessful={isSuccessful}>Sign up</SubmitButton>
+        <SubmitButton isSuccessful={isSuccessful}>
+          {t("register.submit")}
+        </SubmitButton>
         <p className="text-center text-[13px] text-muted-foreground">
-          {"Have an account? "}
+          {`${t("register.haveAccount")} `}
           <Link
             className="text-foreground underline-offset-4 hover:underline"
             href="/login"
           >
-            Sign in
+            {t("register.signInLink")}
           </Link>
         </p>
       </AuthForm>

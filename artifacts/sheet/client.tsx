@@ -15,7 +15,7 @@ type Metadata = Record<string, never>;
 export const sheetArtifact = new Artifact<"sheet", Metadata>({
   actions: [
     {
-      description: "View Previous version",
+      description: "viewPrevious",
       icon: <UndoIcon size={18} />,
       isDisabled: ({ currentVersionIndex }) => {
         if (currentVersionIndex === 0) {
@@ -29,7 +29,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
       },
     },
     {
-      description: "View Next version",
+      description: "viewNext",
       icon: <RedoIcon size={18} />,
       isDisabled: ({ isCurrentVersion }) => {
         if (isCurrentVersion) {
@@ -43,9 +43,9 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
       },
     },
     {
-      description: "Copy as .csv",
+      description: "copyCsv",
       icon: <CopyIcon />,
-      onClick: ({ content }) => {
+      onClick: ({ content, t }) => {
         const parsed = parse<string[]>(content, { skipEmptyLines: true });
 
         const nonEmptyRows = parsed.data.filter((row) =>
@@ -55,7 +55,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
         const cleanedCsv = unparse(nonEmptyRows);
 
         navigator.clipboard.writeText(cleanedCsv);
-        toast.success("Copied csv to clipboard!");
+        toast.success(t("toasts.copiedCsv"));
       },
     },
   ],
@@ -83,25 +83,23 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
   },
   toolbar: [
     {
-      description: "Format and clean data",
+      description: "formatClean",
       icon: <SparklesIcon />,
-      onClick: ({ sendMessage }) => {
+      onClick: ({ sendMessage, t }) => {
         sendMessage({
-          parts: [
-            { text: "Can you please format and clean the data?", type: "text" },
-          ],
+          parts: [{ text: t("messages.formatClean"), type: "text" }],
           role: "user",
         });
       },
     },
     {
-      description: "Analyze and visualize data",
+      description: "analyzeVisualize",
       icon: <LineChartIcon />,
-      onClick: ({ sendMessage }) => {
+      onClick: ({ sendMessage, t }) => {
         sendMessage({
           parts: [
             {
-              text: "Can you please analyze and visualize the data by creating a new code artifact in python?",
+              text: t("messages.analyzeVisualize"),
               type: "text",
             },
           ],

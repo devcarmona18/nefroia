@@ -3,14 +3,9 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
-import {
-  ArrowUpIcon,
-  BrainIcon,
-  EyeIcon,
-  LockIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { ArrowUpIcon, BrainIcon, EyeIcon, WrenchIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import {
   type ChangeEvent,
@@ -42,7 +37,10 @@ import {
   chatModels,
   DEFAULT_CHAT_MODEL,
   type ModelCapabilities,
+  type ModelProvider,
+  PROVIDER_NAMES,
 } from "@/lib/ai/models";
+import { ALLOWED_UPLOAD_TYPES } from "@/lib/storage/file-validation";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -109,6 +107,7 @@ function PureMultimodalInput({
   onCancelEdit?: () => void;
   isLoading?: boolean;
 }) {
+  const t = useTranslations("input");
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -175,7 +174,7 @@ function PureMultimodalInput({
           setMessages(() => []);
           break;
         case "rename":
-          toast("Rename is available from the sidebar chat menu.");
+          toast(t("renameHint"));
           break;
         case "model": {
           const modelBtn = document.querySelector<HTMLButtonElement>(
@@ -188,24 +187,24 @@ function PureMultimodalInput({
           setTheme(resolvedTheme === "dark" ? "light" : "dark");
           break;
         case "delete":
-          toast("Delete this chat?", {
+          toast(t("deleteChatPrompt"), {
             action: {
-              label: "Delete",
+              label: t("delete"),
               onClick: () => {
                 fetch(
                   `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/chat?id=${chatId}`,
                   { method: "DELETE" }
                 );
                 router.push("/");
-                toast.success("Chat deleted");
+                toast.success(t("chatDeleted"));
               },
             },
           });
           break;
         case "purge":
-          toast("Delete all chats?", {
+          toast(t("deleteAllPrompt"), {
             action: {
-              label: "Delete all",
+              label: t("deleteAll"),
               onClick: () => {
                 fetch(
                   `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/history`,
@@ -214,7 +213,7 @@ function PureMultimodalInput({
                   }
                 );
                 router.push("/");
-                toast.success("All chats deleted");
+                toast.success(t("allChatsDeleted"));
               },
             },
           });
@@ -223,7 +222,7 @@ function PureMultimodalInput({
           break;
       }
     },
-    [chatId, resolvedTheme, router, setInput, setMessages, setTheme]
+    [chatId, resolvedTheme, router, setInput, setMessages, setTheme, t]
   );
 
   const submitForm = useCallback(() => {
@@ -267,35 +266,40 @@ function PureMultimodalInput({
     chatId,
   ]);
 
-  const uploadFile = useCallback(async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/files/upload`,
-        {
-          body: formData,
-          method: "POST",
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/files/upload`,
+          {
+            body: formData,
+            method: "POST",
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const { url, pathname, contentType } = data;
+
+          return {
+            contentType,
+            name: pathname,
+            url,
+          };
         }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
-
-        return {
-          contentType,
-          name: pathname,
-          url,
-        };
+        const { code } = await response.json();
+        toast.error(
+          t(`uploadErrors.${code}`, { defaultValue: t("uploadFailed") })
+        );
+      } catch {
+        toast.error(t("uploadFailed"));
       }
-      const { error } = await response.json();
-      toast.error(error);
-    } catch {
-      toast.error("Failed to upload file, please try again!");
-    }
-  }, []);
+    },
+    [t]
+  );
 
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
@@ -315,12 +319,12 @@ function PureMultimodalInput({
           ...successfullyUploadedAttachments,
         ]);
       } catch {
-        toast.error("Failed to upload files");
+        toast.error(t("uploadFailedMany"));
       } finally {
         setUploadQueue([]);
       }
     },
-    [setAttachments, uploadFile]
+    [setAttachments, t, uploadFile]
   );
 
   const handlePaste = useCallback(
@@ -340,7 +344,7 @@ function PureMultimodalInput({
 
       event.preventDefault();
 
-      setUploadQueue((prev) => [...prev, "Pasted image"]);
+      setUploadQueue((prev) => [...prev, t("pastedImage")]);
 
       try {
         const uploadPromises = imageItems
@@ -361,12 +365,12 @@ function PureMultimodalInput({
           ...(successfullyUploadedAttachments as Attachment[]),
         ]);
       } catch {
-        toast.error("Failed to upload pasted image(s)");
+        toast.error(t("pasteFailed"));
       } finally {
         setUploadQueue([]);
       }
     },
-    [setAttachments, uploadFile]
+    [setAttachments, t, uploadFile]
   );
 
   useEffect(() => {
@@ -406,9 +410,9 @@ function PureMultimodalInput({
     if (status === "ready" || status === "error") {
       submitForm();
     } else {
-      toast.error("Please wait for the model to finish its response!");
+      toast.error(t("waitForResponse"));
     }
-  }, [attachments.length, handleSlashSelect, input, status, submitForm]);
+  }, [attachments.length, handleSlashSelect, input, status, submitForm, t]);
 
   const handleTextareaKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -458,13 +462,13 @@ function PureMultimodalInput({
     <div className={cn("relative flex w-full flex-col gap-4", className)}>
       {editingMessage && onCancelEdit ? (
         <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          <span>Editing message</span>
+          <span>{t("editingMessage")}</span>
           <button
             className="rounded px-1.5 py-0.5 text-muted-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
             onMouseDown={handleCancelEditMouseDown}
             type="button"
           >
-            Cancel
+            {t("cancel")}
           </button>
         </div>
       ) : null}
@@ -482,6 +486,7 @@ function PureMultimodalInput({
         )}
 
       <input
+        accept={ALLOWED_UPLOAD_TYPES.join(",")}
         className="pointer-events-none fixed -top-4 -left-4 size-0.5 opacity-0"
         multiple
         onChange={handleFileChange}
@@ -537,9 +542,7 @@ function PureMultimodalInput({
           data-testid="multimodal-input"
           onChange={handleInput}
           onKeyDown={handleTextareaKeyDown}
-          placeholder={
-            editingMessage ? "Edit your message..." : "Ask anything..."
-          }
+          placeholder={editingMessage ? t("editPlaceholder") : t("placeholder")}
           ref={textareaRef}
           value={input}
         />
@@ -644,6 +647,7 @@ function PureAttachmentsButton({
   status: UseChatHelpers<ChatMessage>["status"];
   selectedModelId: string;
 }) {
+  const t = useTranslations("input");
   const { data: modelsResponse } = useSWR(
     `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/models`,
     (url: string) => fetch(url).then((r) => r.json()),
@@ -651,7 +655,7 @@ function PureAttachmentsButton({
   );
 
   const caps: Record<string, ModelCapabilities> | undefined =
-    modelsResponse?.capabilities ?? modelsResponse;
+    modelsResponse?.capabilities;
   const hasVision = caps?.[selectedModelId]?.vision ?? false;
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -663,6 +667,7 @@ function PureAttachmentsButton({
 
   return (
     <Button
+      aria-label={t("attach")}
       className={cn(
         "h-7 w-7 rounded-lg border border-border/40 p-1 transition-colors",
         hasVision
@@ -683,40 +688,30 @@ const AttachmentsButton = memo(PureAttachmentsButton);
 
 function ModelSelectorOption({
   capabilities,
-  curated,
   model,
   onModelChange,
   selectedModelId,
   setOpen,
 }: {
   capabilities: Record<string, ModelCapabilities> | undefined;
-  curated: boolean;
   model: ChatModel;
   onModelChange?: (modelId: string) => void;
   selectedModelId: string;
   setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
+  const t = useTranslations("models");
   const [logoProvider] = model.id.split("/");
-  const maybeWithTooltip = (icon: ReactNode, label: string) => {
-    if (!curated) {
-      return icon;
-    }
-
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="inline-flex">{icon}</span>
-        </TooltipTrigger>
-        <TooltipContent side="top" sideOffset={8}>
-          {label}
-        </TooltipContent>
-      </Tooltip>
-    );
-  };
+  const withTooltip = (icon: ReactNode, label: string) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">{icon}</span>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={8}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
   const handleSelect = useCallback(() => {
-    if (!curated) {
-      return;
-    }
     onModelChange?.(model.id);
     setCookie("chat-model", model.id);
     setOpen(false);
@@ -725,18 +720,14 @@ function ModelSelectorOption({
         .querySelector<HTMLTextAreaElement>("[data-testid='multimodal-input']")
         ?.focus();
     }, 50);
-  }, [curated, model.id, onModelChange, setOpen]);
+  }, [model.id, onModelChange, setOpen]);
 
-  const option = (
+  return (
     <ModelSelectorItem
-      aria-disabled={!curated}
       className={cn(
-        "flex w-full transition-colors",
+        "flex w-full transition-colors data-[selected=true]:bg-muted data-[selected=true]:text-foreground",
         model.id === selectedModelId &&
-          "border-b border-dashed border-foreground/50",
-        curated
-          ? "data-[selected=true]:bg-muted data-[selected=true]:text-foreground"
-          : "cursor-not-allowed opacity-40 data-[selected=true]:bg-transparent data-[selected=true]:opacity-60 data-[selected=true]:ring-1 data-[selected=true]:ring-muted-foreground/30 data-[selected=true]:ring-inset"
+          "border-b border-dashed border-foreground/50"
       )}
       onSelect={handleSelect}
       value={model.id}
@@ -745,41 +736,19 @@ function ModelSelectorOption({
       <ModelSelectorName>{model.name}</ModelSelectorName>
       <div className="ml-auto flex items-center gap-2 text-foreground/70">
         {capabilities?.[model.id]?.tools
-          ? maybeWithTooltip(
-              <WrenchIcon className="size-3.5" />,
-              "Supports tool use"
-            )
+          ? withTooltip(<WrenchIcon className="size-3.5" />, t("supportsTools"))
           : null}
         {capabilities?.[model.id]?.vision
-          ? maybeWithTooltip(
-              <EyeIcon className="size-3.5" />,
-              "Supports vision"
-            )
+          ? withTooltip(<EyeIcon className="size-3.5" />, t("supportsVision"))
           : null}
         {capabilities?.[model.id]?.reasoning
-          ? maybeWithTooltip(
+          ? withTooltip(
               <BrainIcon className="size-3.5" />,
-              "Supports reasoning"
+              t("supportsReasoning")
             )
           : null}
-        {!curated && <LockIcon className="size-3 text-muted-foreground/50" />}
       </div>
     </ModelSelectorItem>
-  );
-
-  if (curated) {
-    return option;
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="w-full cursor-not-allowed">{option}</div>
-      </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={8}>
-        This model is not available in the demo.
-      </TooltipContent>
-    </Tooltip>
   );
 }
 
@@ -790,6 +759,7 @@ function PureModelSelectorCompact({
   selectedModelId: string;
   onModelChange?: (modelId: string) => void;
 }) {
+  const t = useTranslations("models");
   const [open, setOpen] = useState(false);
   const { data: modelsData } = useSWR(
     `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/models`,
@@ -798,15 +768,22 @@ function PureModelSelectorCompact({
   );
 
   const capabilities: Record<string, ModelCapabilities> | undefined =
-    modelsData?.capabilities ?? modelsData;
-  const dynamicModels: ChatModel[] | undefined = modelsData?.models;
-  const activeModels = dynamicModels ?? chatModels;
+    modelsData?.capabilities;
+  const activeModels: ChatModel[] = modelsData?.models ?? chatModels;
 
   const selectedModel =
     activeModels.find((m: ChatModel) => m.id === selectedModelId) ??
     activeModels.find((m: ChatModel) => m.id === DEFAULT_CHAT_MODEL) ??
     activeModels[0];
   const [provider] = selectedModel.id.split("/");
+
+  const grouped = activeModels.reduce<Record<string, ChatModel[]>>(
+    (acc, model) => {
+      acc[model.provider] = [...(acc[model.provider] ?? []), model];
+      return acc;
+    },
+    {}
+  );
 
   return (
     <ModelSelector onOpenChange={setOpen} open={open}>
@@ -821,89 +798,27 @@ function PureModelSelectorCompact({
         </Button>
       </ModelSelectorTrigger>
       <ModelSelectorContent commandDefaultValue={selectedModel.id}>
-        <ModelSelectorInput placeholder="Search models..." />
+        <ModelSelectorInput placeholder={t("search")} />
         <ModelSelectorList>
-          {(() => {
-            const curatedIds = new Set(chatModels.map((m) => m.id));
-            const allModels = dynamicModels
-              ? [
-                  ...chatModels,
-                  ...dynamicModels.filter((m) => !curatedIds.has(m.id)),
-                ]
-              : chatModels;
-
-            const grouped: Record<
-              string,
-              { model: ChatModel; curated: boolean }[]
-            > = {};
-            for (const model of allModels) {
-              const key = curatedIds.has(model.id)
-                ? "_available"
-                : model.provider;
-              if (!grouped[key]) {
-                grouped[key] = [];
+          {Object.entries(grouped).map(([providerId, models]) => (
+            <ModelSelectorGroup
+              heading={
+                PROVIDER_NAMES[providerId as ModelProvider] ?? providerId
               }
-              grouped[key].push({ curated: curatedIds.has(model.id), model });
-            }
-
-            const sortedKeys = Object.keys(grouped).sort((a, b) => {
-              if (a === "_available") {
-                return -1;
-              }
-              if (b === "_available") {
-                return 1;
-              }
-              return a.localeCompare(b);
-            });
-
-            const providerNames: Record<string, string> = {
-              alibaba: "Alibaba",
-              anthropic: "Anthropic",
-              "arcee-ai": "Arcee AI",
-              bytedance: "ByteDance",
-              cohere: "Cohere",
-              deepseek: "DeepSeek",
-              google: "Google",
-              inception: "Inception",
-              kwaipilot: "Kwaipilot",
-              meituan: "Meituan",
-              meta: "Meta",
-              minimax: "MiniMax",
-              mistral: "Mistral",
-              moonshotai: "Moonshot",
-              morph: "Morph",
-              nvidia: "Nvidia",
-              openai: "OpenAI",
-              perplexity: "Perplexity",
-              "prime-intellect": "Prime Intellect",
-              xai: "xAI",
-              xiaomi: "Xiaomi",
-              zai: "Zai",
-            };
-
-            return sortedKeys.map((key) => (
-              <ModelSelectorGroup
-                heading={
-                  key === "_available"
-                    ? "Available"
-                    : (providerNames[key] ?? key)
-                }
-                key={key}
-              >
-                {grouped[key].map(({ model, curated }) => (
-                  <ModelSelectorOption
-                    capabilities={capabilities}
-                    curated={curated}
-                    key={model.id}
-                    model={model}
-                    onModelChange={onModelChange}
-                    selectedModelId={selectedModel.id}
-                    setOpen={setOpen}
-                  />
-                ))}
-              </ModelSelectorGroup>
-            ));
-          })()}
+              key={providerId}
+            >
+              {models.map((model) => (
+                <ModelSelectorOption
+                  capabilities={capabilities}
+                  key={model.id}
+                  model={model}
+                  onModelChange={onModelChange}
+                  selectedModelId={selectedModel.id}
+                  setOpen={setOpen}
+                />
+              ))}
+            </ModelSelectorGroup>
+          ))}
         </ModelSelectorList>
       </ModelSelectorContent>
     </ModelSelector>
@@ -919,6 +834,7 @@ function PureStopButton({
   stop: () => void;
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
 }) {
+  const t = useTranslations("input");
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
@@ -930,6 +846,7 @@ function PureStopButton({
 
   return (
     <Button
+      aria-label={t("stop")}
       className="h-7 w-7 rounded-xl bg-foreground p-1 text-background transition-all duration-200 hover:opacity-85 active:scale-95 disabled:bg-muted disabled:text-muted-foreground/25 disabled:cursor-not-allowed"
       data-testid="stop-button"
       onClick={handleClick}

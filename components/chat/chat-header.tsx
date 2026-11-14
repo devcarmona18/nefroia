@@ -2,10 +2,12 @@
 
 import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import { VercelIcon } from "./icons";
+import { Logo } from "../brand/logo";
+import { LanguageSwitcher } from "../language-switcher";
 import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
 
 function PureChatHeader({
@@ -17,6 +19,7 @@ function PureChatHeader({
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
+  const t = useTranslations("sidebar");
   const { state, toggleSidebar, isMobile } = useSidebar();
 
   if (state === "collapsed" && !isMobile) {
@@ -26,6 +29,7 @@ function PureChatHeader({
   return (
     <header className="sticky top-0 flex h-14 items-center gap-2 bg-sidebar px-3">
       <Button
+        aria-label={t("toggleSidebar")}
         className="md:hidden"
         onClick={toggleSidebar}
         size="icon-sm"
@@ -35,12 +39,11 @@ function PureChatHeader({
       </Button>
 
       <Link
+        aria-label="NefroIA"
         className="flex size-8 items-center justify-center rounded-lg md:hidden"
-        href="https://vercel.com/templates/next.js/chatbot"
-        rel="noopener noreferrer"
-        target="_blank"
+        href="/"
       >
-        <VercelIcon size={14} />
+        <Logo size={20} />
       </Link>
 
       {!isReadonly && (
@@ -50,19 +53,9 @@ function PureChatHeader({
         />
       )}
 
-      <Button
-        asChild
-        className="hidden rounded-lg bg-foreground px-4 text-background hover:bg-foreground/90 md:ml-auto md:flex"
-      >
-        <Link
-          href="https://vercel.com/templates/next.js/chatbot"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <VercelIcon size={16} />
-          Deploy with Vercel
-        </Link>
-      </Button>
+      <div className="ml-auto">
+        <LanguageSwitcher />
+      </div>
     </header>
   );
 }

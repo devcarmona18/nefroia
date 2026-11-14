@@ -13,6 +13,7 @@ import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { ChevronDownIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   createContext,
   memo,
@@ -154,24 +155,33 @@ export type ReasoningTriggerProps = ComponentProps<
   getThinkingMessage?: (isStreaming: boolean, duration?: number) => ReactNode;
 };
 
-const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
-  if (isStreaming || duration === 0) {
-    return <Shimmer className="font-medium" duration={1}>Thinking...</Shimmer>;
-  }
-  if (duration === undefined) {
-    return <p>Thought for a few seconds</p>;
-  }
-  return <p>Thought for {duration} seconds</p>;
-};
-
 export const ReasoningTrigger = memo(
   ({
     className,
     children,
-    getThinkingMessage = defaultGetThinkingMessage,
+    getThinkingMessage,
     ...props
   }: ReasoningTriggerProps) => {
+    const t = useTranslations("reasoning");
     const { isStreaming, isOpen, duration } = useReasoning();
+
+    const defaultGetThinkingMessage = (
+      streaming: boolean,
+      seconds?: number
+    ) => {
+      if (streaming || seconds === 0) {
+        return (
+          <Shimmer className="font-medium" duration={1}>
+            {t("thinking")}
+          </Shimmer>
+        );
+      }
+      if (seconds === undefined) {
+        return <p>{t("thoughtFewSeconds")}</p>;
+      }
+      return <p>{t("thoughtSeconds", { seconds })}</p>;
+    };
+    const getMessage = getThinkingMessage ?? defaultGetThinkingMessage;
 
     return (
       <CollapsibleTrigger
@@ -183,7 +193,7 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            {getThinkingMessage(isStreaming, duration)}
+            {getMessage(isStreaming, duration)}
             <ChevronDownIcon
               className={cn(
                 "size-4 transition-transform",

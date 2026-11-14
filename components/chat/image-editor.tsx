@@ -1,4 +1,5 @@
 import cn from "classnames";
+import { useTranslations } from "next-intl";
 import { LoaderIcon } from "./icons";
 
 type ImageEditorProps = {
@@ -16,6 +17,8 @@ export function ImageEditor({
   status,
   isInline,
 }: ImageEditorProps) {
+  const t = useTranslations("artifact");
+
   return (
     <div
       className={cn("flex w-full flex-row items-center justify-center", {
@@ -30,7 +33,7 @@ export function ImageEditor({
               <LoaderIcon />
             </div>
           )}
-          <div>Generating Image...</div>
+          <div>{t("generatingImage")}</div>
         </div>
       ) : (
         <picture>

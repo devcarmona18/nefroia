@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 
 import type { UISuggestion } from "@/lib/editor/suggestions";
@@ -16,6 +17,7 @@ export const SuggestionDialog = ({
   onApply: () => void;
   onClose: () => void;
 }) => {
+  const t = useTranslations("artifact");
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -67,14 +69,14 @@ export const SuggestionDialog = ({
               onClick={onApply}
               variant="outline"
             >
-              Apply
+              {t("applySuggestion")}
             </Button>
             <Button
               className="w-fit rounded-full px-3 py-1.5"
               onClick={onClose}
               variant="ghost"
             >
-              Dismiss
+              {t("dismissSuggestion")}
             </Button>
           </div>
         </motion.div>

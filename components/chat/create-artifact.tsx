@@ -5,7 +5,14 @@ import type { Suggestion } from "@/lib/db/schema";
 import type { ChatMessage, CustomUIDataTypes } from "@/lib/types";
 import type { UIArtifact } from "./artifact";
 
+export type ArtifactTranslator = (
+  key: string,
+  values?: Record<string, string | number>
+) => string;
+
 export type ArtifactActionContext<M = any> = {
+  /** Traductor del namespace "artifact" (messages/*.json). */
+  t: ArtifactTranslator;
   content: string;
   handleVersionChange: (type: "next" | "prev" | "toggle" | "latest") => void;
   currentVersionIndex: number;
@@ -17,7 +24,7 @@ export type ArtifactActionContext<M = any> = {
 
 type ArtifactAction<M = any> = {
   icon: ReactNode;
-  label?: string;
+  /** Clave en `artifact.actions.*` (texto del tooltip). */
   description: string;
   onClick: (context: ArtifactActionContext<M>) => Promise<void> | void;
   isDisabled?: (context: ArtifactActionContext<M>) => boolean;
@@ -25,9 +32,12 @@ type ArtifactAction<M = any> = {
 
 export type ArtifactToolbarContext = {
   sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
+  /** Traductor del namespace "artifact" (messages/*.json). */
+  t: ArtifactTranslator;
 };
 
 export type ArtifactToolbarItem = {
+  /** Clave en `artifact.toolbar.*` (texto del tooltip). */
   description: string;
   icon: ReactNode;
   onClick: (context: ArtifactToolbarContext) => void;

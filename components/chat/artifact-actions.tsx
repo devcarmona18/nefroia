@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { memo, type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -34,17 +35,18 @@ function ArtifactActionButton({
   isActive: boolean;
   setIsLoading: (isLoading: boolean) => void;
 }) {
+  const t = useTranslations("artifact");
   const handleClick = useCallback(async () => {
     setIsLoading(true);
 
     try {
       await Promise.resolve(action.onClick(actionContext));
     } catch {
-      toast.error("Failed to execute action");
+      toast.error(t("toasts.actionFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [action, actionContext, setIsLoading]);
+  }, [action, actionContext, setIsLoading, t]);
 
   return (
     <Tooltip>
@@ -67,7 +69,7 @@ function ArtifactActionButton({
         </button>
       </TooltipTrigger>
       <TooltipContent side="left" sideOffset={8}>
-        {action.description}
+        {t(`actions.${action.description}`)}
       </TooltipContent>
     </Tooltip>
   );
@@ -82,6 +84,7 @@ function PureArtifactActions({
   metadata,
   setMetadata,
 }: ArtifactActionsProps) {
+  const t = useTranslations("artifact");
   const [isLoading, setIsLoading] = useState(false);
 
   const artifactDefinition = artifactDefinitions.find(
@@ -100,6 +103,7 @@ function PureArtifactActions({
     metadata,
     mode,
     setMetadata,
+    t: (key, values) => t(key as never, values as never),
   };
 
   return (
@@ -117,7 +121,7 @@ function PureArtifactActions({
             action={action}
             actionContext={actionContext}
             disabled={disabled}
-            isActive={mode === "diff" && action.description === "View changes"}
+            isActive={mode === "diff" && action.description === "viewChanges"}
             key={action.description}
             setIsLoading={setIsLoading}
           />
