@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.github
+.husky
+.env
+.env.*
+!.env.example
+playwright-report
+test-results
+blob-report
+coverage
+*.md
+!README.md
+tsconfig.tsbuildinfo
+Dockerfile
+docker-compose.yml

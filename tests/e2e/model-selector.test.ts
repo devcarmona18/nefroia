@@ -14,18 +14,18 @@ test.describe("Model Selector", () => {
     const modelButton = page.getByTestId("model-selector");
     await modelButton.click();
 
-    await expect(page.getByPlaceholder("Search models...")).toBeVisible();
+    await expect(page.getByPlaceholder("Buscar modelos...")).toBeVisible();
   });
 
   test("can search for models", async ({ page }) => {
     const modelButton = page.getByTestId("model-selector");
     await modelButton.click();
 
-    const searchInput = page.getByPlaceholder("Search models...");
-    await searchInput.fill("DeepSeek");
+    const searchInput = page.getByPlaceholder("Buscar modelos...");
+    await searchInput.fill("Gemini");
 
     await expect(
-      page.getByRole("option", { name: /DeepSeek V3\.2/ })
+      page.getByRole("option", { name: /Gemini 2\.5 Pro/ })
     ).toBeVisible();
   });
 
@@ -33,24 +33,24 @@ test.describe("Model Selector", () => {
     const modelButton = page.getByTestId("model-selector");
     await modelButton.click();
 
-    await expect(page.getByPlaceholder("Search models...")).toBeVisible();
+    await expect(page.getByPlaceholder("Buscar modelos...")).toBeVisible();
 
     await page.keyboard.press("Escape");
 
-    await expect(page.getByPlaceholder("Search models...")).not.toBeVisible();
+    await expect(page.getByPlaceholder("Buscar modelos...")).not.toBeVisible();
   });
 
   test("shows available models", async ({ page }) => {
     const modelButton = page.getByTestId("model-selector");
     await modelButton.click();
 
-    const availableModels = page.getByRole("group", { name: "Available" });
+    const availableModels = page.getByRole("group", { name: "Anthropic" });
     await expect(availableModels).toBeVisible();
     await expect(
-      availableModels.getByRole("option", { name: /DeepSeek V3\.2/ })
+      availableModels.getByRole("option", { name: /Gemini 2\.5 Pro/ })
     ).toBeVisible();
     await expect(
-      availableModels.getByRole("option", { name: /Kimi K2\.5/ })
+      availableModels.getByRole("option", { name: /Claude Sonnet 4\.5/ })
     ).toBeVisible();
   });
 
@@ -58,9 +58,9 @@ test.describe("Model Selector", () => {
     const modelButton = page.getByTestId("model-selector");
     await modelButton.click();
 
-    await page.getByRole("option", { name: /DeepSeek V3\.2/ }).click();
+    await page.getByRole("option", { name: /Gemini 2\.5 Pro/ }).click();
 
-    await expect(page.getByPlaceholder("Search models...")).not.toBeVisible();
-    await expect(modelButton).toContainText("DeepSeek V3.2");
+    await expect(page.getByPlaceholder("Buscar modelos...")).not.toBeVisible();
+    await expect(modelButton).toContainText("Gemini 2.5 Pro");
   });
 });

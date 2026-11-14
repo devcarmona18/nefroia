@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-const MODEL_BUTTON_REGEX = /Kimi|Codestral|Mistral|DeepSeek|GPT|Grok/i;
+const MODEL_BUTTON_REGEX = /Claude|GPT|Gemini/i;
 
 export class ChatPage {
   page: Page;
@@ -66,6 +66,6 @@ export class ChatPage {
 
   async searchModels(query: string) {
     await this.openModelSelector();
-    await this.page.getByPlaceholder("Search models...").fill(query);
+    await this.page.getByPlaceholder("Buscar modelos...").fill(query);
   }
 }

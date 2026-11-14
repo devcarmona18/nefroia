@@ -1,0 +1,103 @@
+# NefroIA: entorno completo para desarrollo local y despliegue sencillo.
+#   cp .env.example .env   # y completa ANTHROPIC_API_KEY y AUTH_SECRET
+#   docker compose up --build
+services:
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      # En Docker los servicios se resuelven por nombre; esto sobrescribe .env.
+      POSTGRES_URL: postgres://nefroia:${POSTGRES_PASSWORD:-nefroia}@postgres:5432/nefroia
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      S3_BUCKET: ${S3_BUCKET:-nefroia-uploads}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-nefroia}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-nefroia-secret}
+      S3_FORCE_PATH_STYLE: "true"
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      target: migrate
+    environment:
+      POSTGRES_URL: postgres://nefroia:${POSTGRES_PASSWORD:-nefroia}@postgres:5432/nefroia
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nefroia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nefroia}
+      POSTGRES_DB: nefroia
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nefroia -d nefroia"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nefroia}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-nefroia-secret}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Crea el bucket privado (sin acceso anónimo) y termina.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nefroia}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-nefroia-secret}
+      S3_BUCKET: ${S3_BUCKET:-nefroia-uploads}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing local/$${S3_BUCKET} &&
+      mc anonymous set none local/$${S3_BUCKET}
+      "
+
+volumes:
+  postgres-data:
+  minio-data:

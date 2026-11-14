@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nefroia
+          POSTGRES_PASSWORD: nefroia
+          POSTGRES_DB: nefroia
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nefroia -d nefroia"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Sin secretos de producción: valores ficticios y modelos simulados.
+    env:
+      AUTH_SECRET: ci-only-secret-not-for-production-0123456789
+      POSTGRES_URL: postgres://nefroia:nefroia@localhost:5432/nefroia
+      NODE_OPTIONS: --max-old-space-size=3072
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm check
+
+      - name: Comprobación de tipos
+        run: pnpm typecheck
+
+      - name: Pruebas unitarias
+        run: pnpm test:unit
+
+      - name: Build
+        run: pnpm build
+
+      - name: Migraciones de base de datos
+        run: pnpm db:migrate
+
+      - name: Instalar Chromium (Playwright)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Pruebas e2e (modelos simulados)
+        run: pnpm test:e2e
+        env:
+          CI: "true"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

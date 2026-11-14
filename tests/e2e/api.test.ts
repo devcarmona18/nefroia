@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const CHAT_URL_REGEX = /\/chat\/[\w-]+/;
-const ERROR_TEXT_REGEX = /error|failed|trouble/i;
+const ERROR_TEXT_REGEX = /error|failed|trouble|salió mal|problemas/i;
 
 test.describe("Chat API Integration", () => {
   test("sends message and receives AI response", async ({ page }) => {
