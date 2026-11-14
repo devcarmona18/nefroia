@@ -38,14 +38,11 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
+// Archivos públicos (iconos, imágenes OG, manifest) no requieren sesión, para
+// que los previsualizadores de enlaces y el navegador puedan leerlos.
+// Nota: Next.js exige que el matcher sea un literal estático.
 export const config = {
   matcher: [
-    "/",
-    "/chat/:id",
-    "/api/:path*",
-    "/login",
-    "/register",
-
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|opengraph-image.png|twitter-image.png|manifest.webmanifest|icon-192.png|icon-512.png|logo.svg|logo-icon.svg|sitemap.xml|robots.txt).*)",
   ],
 };

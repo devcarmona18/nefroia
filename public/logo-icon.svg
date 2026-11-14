@@ -1,0 +1,21 @@
+<svg
+  aria-labelledby="t"
+  role="img"
+  viewBox="0 0 64 64"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="t">NefroIA</title>
+  <rect fill="#0E7490" height="64" rx="14" width="64" />
+  <path
+    d="M32 10C32 10 16 26.5 16 38.5a16 16 0 0 0 32 0C48 26.5 32 10 32 10Z"
+    fill="#14B8A6"
+  />
+  <path
+    d="M19 38H26l3.2-7.5 4.8 15 3.6-7.5H45"
+    fill="none"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="3"
+  />
+</svg>
