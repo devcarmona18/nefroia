@@ -16,7 +16,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import type { ArtifactKind } from "@/components/chat/artifact";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
-import { ChatbotError } from "../errors";
+import { AppError } from "../errors";
 import { generateUUID } from "../utils";
 import {
   type Chat,
@@ -38,9 +38,12 @@ const db = drizzle(client);
 
 export async function getUser(email: string): Promise<User[]> {
   try {
-    return await db.select().from(user).where(eq(user.email, email));
+    return await db
+      .select()
+      .from(user)
+      .where(eq(user.email, email.trim().toLowerCase()));
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -48,16 +51,22 @@ export async function createUser(email: string, password: string) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
-    return await db.insert(user).values({ email, password: hashedPassword });
+    return await db
+      .insert(user)
+      .values({ email: email.trim().toLowerCase(), password: hashedPassword });
   } catch (error) {
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
 }
 
 export async function createGuestUser() {
-  const email = `guest-${Date.now()}`;
+  // Sufijo aleatorio para evitar colisiones con el índice único de email.
+  const suffix = Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, "0");
+  const email = `guest-${Date.now()}${suffix}`;
   const password = generateHashedPassword(generateUUID());
 
   try {
@@ -66,7 +75,7 @@ export async function createGuestUser() {
       id: user.id,
     });
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -90,7 +99,7 @@ export async function saveChat({
       visibility,
     });
   } catch (error) {
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
@@ -108,7 +117,7 @@ export async function deleteChatById({ id }: { id: string }) {
       .returning();
     return chatsDeleted;
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -136,7 +145,7 @@ export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
 
     return { deletedCount: deletedChats.length };
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -176,7 +185,7 @@ export async function getChatsByUserId({
         .limit(1);
 
       if (!selectedChat) {
-        throw new ChatbotError(
+        throw new AppError(
           "not_found:database",
           `Chat with id ${startingAfter} not found`
         );
@@ -191,7 +200,7 @@ export async function getChatsByUserId({
         .limit(1);
 
       if (!selectedChat) {
-        throw new ChatbotError(
+        throw new AppError(
           "not_found:database",
           `Chat with id ${endingBefore} not found`
         );
@@ -209,7 +218,7 @@ export async function getChatsByUserId({
       hasMore,
     };
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -222,7 +231,7 @@ export async function getChatById({ id }: { id: string }) {
 
     return selectedChat;
   } catch (error) {
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
@@ -232,7 +241,7 @@ export async function saveMessages({ messages }: { messages: DBMessage[] }) {
   try {
     return await db.insert(message).values(messages);
   } catch (error) {
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
@@ -248,7 +257,7 @@ export async function updateMessage({
   try {
     return await db.update(message).set({ parts }).where(eq(message.id, id));
   } catch (error) {
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
@@ -262,7 +271,7 @@ export async function getMessagesByChatId({ id }: { id: string }) {
       .where(eq(message.chatId, id))
       .orderBy(asc(message.createdAt));
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -293,7 +302,7 @@ export async function voteMessage({
       messageId,
     });
   } catch (error) {
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
@@ -303,7 +312,7 @@ export async function getVotesByChatId({ id }: { id: string }) {
   try {
     return await db.select().from(vote).where(eq(vote.chatId, id));
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -333,7 +342,7 @@ export async function saveDocument({
       })
       .returning();
   } catch (error) {
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
@@ -356,7 +365,7 @@ export async function updateDocumentContent({
 
     const [latest] = docs;
     if (!latest) {
-      throw new ChatbotError("not_found:database", "Document not found");
+      throw new AppError("not_found:database", "Document not found");
     }
 
     return await db
@@ -365,10 +374,10 @@ export async function updateDocumentContent({
       .where(and(eq(document.id, id), eq(document.createdAt, latest.createdAt)))
       .returning();
   } catch (error) {
-    if (error instanceof ChatbotError) {
+    if (error instanceof AppError) {
       throw error;
     }
-    throw new ChatbotError("bad_request:database", {
+    throw new AppError("bad_request:database", {
       cause: error,
     });
   }
@@ -384,7 +393,7 @@ export async function getDocumentsById({ id }: { id: string }) {
 
     return documents;
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -398,7 +407,7 @@ export async function getDocumentById({ id }: { id: string }) {
 
     return selectedDocument;
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -424,7 +433,7 @@ export async function deleteDocumentsByIdAfterTimestamp({
       .where(and(eq(document.id, id), gt(document.createdAt, timestamp)))
       .returning();
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -436,7 +445,7 @@ export async function saveSuggestions({
   try {
     return await db.insert(suggestion).values(suggestions);
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -451,7 +460,7 @@ export async function getSuggestionsByDocumentId({
       .from(suggestion)
       .where(eq(suggestion.documentId, documentId));
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -459,7 +468,7 @@ export async function getMessageById({ id }: { id: string }) {
   try {
     return await db.select().from(message).where(eq(message.id, id));
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -496,7 +505,7 @@ export async function deleteMessagesByChatIdAfterTimestamp({
         );
     }
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -510,7 +519,7 @@ export async function updateChatVisibilityById({
   try {
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -555,7 +564,7 @@ export async function getMessageCountByUserId({
 
     return stats?.count ?? 0;
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -571,7 +580,7 @@ export async function createStreamId({
       .insert(stream)
       .values({ chatId, createdAt: new Date(), id: streamId });
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }
 
@@ -586,6 +595,6 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
 
     return streamIds.map(({ id }) => id);
   } catch (error) {
-    throw new ChatbotError("bad_request:database", { cause: error });
+    throw new AppError("bad_request:database", { cause: error });
   }
 }

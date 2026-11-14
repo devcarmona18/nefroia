@@ -2,53 +2,79 @@ import type { InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   foreignKey,
+  index,
   json,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const user = pgTable("User", {
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  email: varchar("email", { length: 64 }).notNull(),
-  emailVerified: boolean("emailVerified").notNull().default(false),
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  image: text("image"),
-  isAnonymous: boolean("isAnonymous").notNull().default(false),
-  name: text("name"),
-  password: varchar("password", { length: 64 }),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
+export const user = pgTable(
+  "User",
+  {
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    email: varchar("email", { length: 64 }).notNull(),
+    emailVerified: boolean("emailVerified").notNull().default(false),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    image: text("image"),
+    isAnonymous: boolean("isAnonymous").notNull().default(false),
+    name: text("name"),
+    password: varchar("password", { length: 64 }),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    emailUnique: uniqueIndex("User_email_unique").on(table.email),
+  })
+);
 
 export type User = InferSelectModel<typeof user>;
 
-export const chat = pgTable("Chat", {
-  createdAt: timestamp("createdAt").notNull(),
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  title: text("title").notNull(),
-  userId: uuid("userId")
-    .notNull()
-    .references(() => user.id),
-  visibility: varchar("visibility", { enum: ["public", "private"] })
-    .notNull()
-    .default("private"),
-});
+export const chat = pgTable(
+  "Chat",
+  {
+    createdAt: timestamp("createdAt").notNull(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    title: text("title").notNull(),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+    visibility: varchar("visibility", { enum: ["public", "private"] })
+      .notNull()
+      .default("private"),
+  },
+  (table) => ({
+    userCreatedIdx: index("Chat_userId_createdAt_idx").on(
+      table.userId,
+      table.createdAt
+    ),
+  })
+);
 
 export type Chat = InferSelectModel<typeof chat>;
 
-export const message = pgTable("Message_v2", {
-  attachments: json("attachments").notNull(),
-  chatId: uuid("chatId")
-    .notNull()
-    .references(() => chat.id),
-  createdAt: timestamp("createdAt").notNull(),
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  parts: json("parts").notNull(),
-  role: varchar("role").notNull(),
-});
+export const message = pgTable(
+  "Message_v2",
+  {
+    attachments: json("attachments").notNull(),
+    chatId: uuid("chatId")
+      .notNull()
+      .references(() => chat.id),
+    createdAt: timestamp("createdAt").notNull(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    parts: json("parts").notNull(),
+    role: varchar("role").notNull(),
+  },
+  (table) => ({
+    chatCreatedIdx: index("Message_v2_chatId_createdAt_idx").on(
+      table.chatId,
+      table.createdAt
+    ),
+  })
+);
 
 export type DBMessage = InferSelectModel<typeof message>;
 
@@ -64,6 +90,7 @@ export const vote = pgTable(
       .references(() => message.id),
   },
   (table) => ({
+    messageIdx: index("Vote_v2_messageId_idx").on(table.messageId),
     pk: primaryKey({ columns: [table.chatId, table.messageId] }),
   })
 );
@@ -86,6 +113,7 @@ export const document = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.id, table.createdAt] }),
+    userIdx: index("Document_userId_idx").on(table.userId),
   })
 );
 
@@ -107,11 +135,16 @@ export const suggestion = pgTable(
       .references(() => user.id),
   },
   (table) => ({
+    documentIdx: index("Suggestion_documentId_documentCreatedAt_idx").on(
+      table.documentId,
+      table.documentCreatedAt
+    ),
     documentRef: foreignKey({
       columns: [table.documentId, table.documentCreatedAt],
       foreignColumns: [document.id, document.createdAt],
     }),
     pk: primaryKey({ columns: [table.id] }),
+    userIdx: index("Suggestion_userId_idx").on(table.userId),
   })
 );
 
@@ -125,6 +158,10 @@ export const stream = pgTable(
     id: uuid("id").notNull().defaultRandom(),
   },
   (table) => ({
+    chatCreatedIdx: index("Stream_chatId_createdAt_idx").on(
+      table.chatId,
+      table.createdAt
+    ),
     chatRef: foreignKey({
       columns: [table.chatId],
       foreignColumns: [chat.id],
