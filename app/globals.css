@@ -507,3 +507,36 @@ textarea:focus-visible {
 [data-testid="artifact"] {
   isolation: isolate;
 }
+
+/* Vista imprimible (hojas de sesión): solo el contenido, en blanco y negro. */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+    size: A4;
+  }
+
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"],
+  [data-slot="sidebar-rail"],
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  html,
+  body {
+    color: black !important;
+    background: white !important;
+  }
+
+  [data-slot="sidebar-wrapper"],
+  [data-slot="sidebar-inset"] {
+    display: block !important;
+    min-height: auto !important;
+    background: white !important;
+  }
+
+  [data-testid="calculation-card"] {
+    box-shadow: none !important;
+  }
+}

@@ -52,7 +52,10 @@
     "deleteAllTitle": "¿Borrar todos los chats?",
     "deleteAllDescription": "Esta acción no se puede deshacer. Se eliminarán de forma permanente todos tus chats.",
     "deleteAllConfirm": "Borrar todo",
-    "allChatsDeleted": "Todos los chats se borraron"
+    "allChatsDeleted": "Todos los chats se borraron",
+    "protocols": "Protocolos",
+    "sessionRecords": "Hojas de sesión",
+    "tools": "Herramientas clínicas"
   },
   "history": {
     "title": "Historial",
@@ -92,14 +95,14 @@
   },
   "chat": {
     "greeting": "¿En qué puedo ayudarte hoy?",
-    "greetingSubtitle": "Consulta dudas de enfermería renal, redacta notas o prepara listas de verificación.",
+    "greetingSubtitle": "Calculadoras de diálisis, consulta de los protocolos de tu unidad y hojas de sesión a partir de tus notas.",
     "placeholder": "Pregunta lo que necesites...",
     "scrollToBottom": "Ir al final",
     "suggestions": [
-      "¿Cuáles son los cuidados de enfermería del acceso vascular (FAV y catéter) durante la hemodiálisis?",
-      "Genera una lista de verificación para preparar la máquina de hemodiálisis antes de iniciar la sesión",
-      "Explícame las complicaciones intradialíticas más frecuentes y cómo actuar ante una hipotensión",
-      "Ayúdame a redactar una nota de enfermería para la entrega de turno de un paciente en hemodiálisis"
+      "Calcula el spKt/V: BUN pre 70, post 21 mg/dL, 4 h, UF 3 L, peso post 70 kg",
+      "Según nuestros protocolos, ¿cómo actúo ante una hipotensión intradiálisis?",
+      "¿Cómo se toma la muestra de BUN posdiálisis según el protocolo de la unidad?",
+      "Crea la hoja de sesión: J.P., máquina 7, FAV izquierda, peso pre 72,5, post 70,4, seco 70, 4 h, UF 2300 mL, PA pre 140/80"
     ]
   },
   "chatApi": {
@@ -165,7 +168,6 @@
     "waiting": "Esperando...",
     "deny": "Rechazar",
     "allow": "Permitir",
-    "weatherDenied": "La consulta del clima fue rechazada.",
     "errorCreating": "Error al crear el documento",
     "errorUpdating": "Error al actualizar el documento",
     "error": "Error",
@@ -254,14 +256,6 @@
     "initializing": "Inicializando...",
     "output": "salida"
   },
-  "weather": {
-    "hourlyForecast": "Pronóstico por horas",
-    "now": "Ahora",
-    "high": "Máx",
-    "low": "Mín",
-    "sunrise": "Amanecer",
-    "sunset": "Atardecer"
-  },
   "reasoning": {
     "thinking": "Pensando...",
     "thoughtFewSeconds": "Pensó unos segundos",
@@ -281,11 +275,17 @@
       "error": "Error"
     },
     "names": {
-      "getWeather": "Consultar el clima",
       "createDocument": "Crear documento",
       "updateDocument": "Actualizar documento",
       "editDocument": "Editar documento",
-      "requestSuggestions": "Pedir sugerencias"
+      "requestSuggestions": "Pedir sugerencias",
+      "calcularURR": "Calcular URR",
+      "calcularKtV": "Calcular spKt/V",
+      "calcularGananciaInterdialitica": "Ganancia interdialítica",
+      "calcularTasaUltrafiltracion": "Tasa de ultrafiltración",
+      "calcularBalanceHidrico": "Balance hídrico",
+      "buscarProtocolos": "Buscar en protocolos",
+      "crearHojaSesion": "Crear hoja de sesión"
     }
   },
   "errors": {
@@ -305,5 +305,320 @@
     "unauthorized_stream": "Debes iniciar sesión para continuar.",
     "forbidden_stream": "Este chat pertenece a otro usuario.",
     "not_found_stream": "No se encontró el chat solicitado."
+  },
+  "clinical": {
+    "disclaimer": "Resultado orientativo de apoyo a la decisión. Verifica los datos; los objetivos y las decisiones dependen de la prescripción médica y del protocolo de la unidad.",
+    "formulaAndReference": "Fórmula y referencia",
+    "formula": "Fórmula",
+    "substitution": "Con tus datos",
+    "reference": "Referencia",
+    "invalidTitle": "No se pudo calcular: {calculator}",
+    "calculators": {
+      "urr": "Tasa de reducción de urea (URR)",
+      "ktv": "spKt/V (Daugirdas 2.ª generación)",
+      "idwg": "Ganancia de peso interdialítica",
+      "ufRate": "Tasa de ultrafiltración",
+      "fluidBalance": "Balance hídrico de la sesión"
+    },
+    "bands": {
+      "optimal": "Objetivo alcanzado",
+      "adequate": "Adecuado",
+      "caution": "Precaución",
+      "alert": "Alerta",
+      "info": "Informativo"
+    },
+    "interpretation": {
+      "urr": {
+        "optimal": "URR ≥ {target} %: alcanza el objetivo habitual de dosis.",
+        "adequate": "URR entre {minimum} % y {target} %: cumple el mínimo recomendado (≥ {minimum} %), por debajo del objetivo de {target} %.",
+        "alert": "URR por debajo del mínimo recomendado de {minimum} %: comunícalo según el protocolo y revisa la técnica de muestra."
+      },
+      "ktv": {
+        "optimal": "spKt/V ≥ {target}: alcanza el objetivo para hemodiálisis {sessionsPerWeek} veces por semana.",
+        "adequate": "spKt/V entre {minimum} y {target}: cumple la dosis mínima entregada, por debajo del objetivo de {target}.",
+        "alert": "spKt/V por debajo de la dosis mínima de {minimum}: comunícalo al nefrólogo y revisa tiempo, flujos y muestras.",
+        "info": "Con {sessionsPerWeek} sesiones por semana no aplican los umbrales 1,2/1,4 (definidos para tres sesiones semanales); interprétalo con el nefrólogo."
+      },
+      "idwg": {
+        "adequate": "Ganancia ≤ {threshold} % del peso seco.",
+        "alert": "Ganancia superior al {threshold} % del peso seco (umbral de uso habitual): valora restricción hídrica y riesgo de hipotensión.",
+        "info": "El peso prediálisis es menor que el post de la sesión anterior: no hay ganancia."
+      },
+      "ufRate": {
+        "optimal": "Tasa ≤ {caution} mL/kg/h.",
+        "caution": "Tasa entre {caution} y {alert} mL/kg/h: vigila de cerca la tolerancia hemodinámica.",
+        "alert": "Tasa superior a {alert} mL/kg/h (KDOQI 2015): asociada a mayor riesgo cardiovascular; consulta la prescripción (tiempo de sesión, peso objetivo)."
+      },
+      "fluidBalance": {
+        "negative": "Balance negativo: se extrajo más líquido del que se administró.",
+        "positive": "Balance positivo: se administró más líquido del que se extrajo.",
+        "neutral": "Balance neutro: ingresos y egresos iguales."
+      }
+    },
+    "details": {
+      "ratio": "R (BUN post/pre)",
+      "urr": "URR equivalente",
+      "gainKg": "Ganancia",
+      "ufPerHour": "UF por hora",
+      "totalIntake": "Ingresos",
+      "totalOutput": "Egresos"
+    },
+    "fields": {
+      "preBun": "BUN prediálisis",
+      "postBun": "BUN posdiálisis",
+      "unit": "Unidad",
+      "durationHours": "Duración (h)",
+      "ufLiters": "Ultrafiltración (L)",
+      "postWeightKg": "Peso posdiálisis",
+      "sessionsPerWeek": "Sesiones por semana",
+      "preWeightKg": "Peso prediálisis",
+      "previousPostWeightKg": "Peso post de la sesión anterior",
+      "dryWeightKg": "Peso seco",
+      "ufVolumeMl": "Volumen de UF (mL)",
+      "weightKg": "Peso",
+      "oralIntakeMl": "Ingesta oral",
+      "ivFluidsMl": "Líquidos IV",
+      "primingRinsebackMl": "Cebado/retorno",
+      "transfusionMl": "Transfusión",
+      "ultrafiltrationMl": "Ultrafiltración",
+      "urineMl": "Diuresis",
+      "otherLossesMl": "Otras pérdidas"
+    },
+    "errors": {
+      "required": "falta el valor.",
+      "not_a_number": "debe ser un número.",
+      "too_low": "debe ser al menos {min} {unit}.",
+      "too_high": "no puede superar {max} {unit} (¿unidad correcta?).",
+      "post_bun_not_lower": "el BUN posdiálisis debe ser menor que el prediálisis.",
+      "ktv_out_of_domain": "los datos quedan fuera del dominio de la fórmula (R − 0,008·t ≤ 0); revisa BUN y duración.",
+      "implausible_weight_change": "la diferencia de peso entre sesiones es implausible; revisa los pesos.",
+      "no_fluid_data": "indica al menos un ingreso o egreso.",
+      "invalid_unit": "unidad no admitida (mg/dL o mmol/L).",
+      "invalid": "valor no válido."
+    }
+  },
+  "safety": {
+    "disclaimer": "NefroIA es una herramienta de apoyo a la decisión: no diagnostica ni prescribe. Sigue el protocolo de la unidad y las órdenes médicas. No introduzcas datos que identifiquen al paciente.",
+    "redaction": {
+      "body": "{count, plural, one {Se ocultó # dato personal} other {Se ocultaron # datos personales}} ({types}) antes de enviar el mensaje al modelo. Usa iniciales o seudónimos.",
+      "types": {
+        "email": "correo",
+        "phone": "teléfono",
+        "medicalRecord": "historia clínica",
+        "birthDate": "fecha de nacimiento",
+        "nationalId": "documento de identidad",
+        "name": "nombre"
+      }
+    },
+    "redFlags": {
+      "title": "Posible urgencia: actúa ahora",
+      "body": "Sigue de inmediato el protocolo de emergencias de la unidad, avisa al médico de turno y pide ayuda. No esperes la respuesta del asistente.",
+      "detected": "Detectado: {categories}.",
+      "categories": {
+        "cardiacArrest": "paro cardiaco",
+        "chestPain": "dolor torácico",
+        "consciousness": "alteración de la conciencia",
+        "breathing": "dificultad respiratoria grave",
+        "severeHypotension": "hipotensión grave",
+        "bleeding": "sangrado / salida de aguja",
+        "airEmbolism": "embolia gaseosa",
+        "anaphylaxis": "reacción anafiláctica",
+        "seizure": "convulsiones",
+        "hemolysis": "hemólisis",
+        "hyperkalemia": "hiperpotasemia"
+      }
+    }
+  },
+  "protocols": {
+    "title": "Protocolos de la unidad",
+    "description": "Sube los protocolos de tu unidad (PDF, Word, Markdown o texto). NefroIA responderá citándolos. Solo tú puedes ver tus documentos.",
+    "upload": {
+      "label": "Subir protocolo",
+      "hint": "PDF, DOCX, MD o TXT · máx. 10 MB",
+      "titleLabel": "Título (opcional)",
+      "titlePlaceholder": "Se usará el nombre del archivo",
+      "submit": "Subir e indexar",
+      "uploading": "Subiendo...",
+      "success": "Protocolo recibido. Se está indexando.",
+      "noPii": "No subas documentos con datos de pacientes."
+    },
+    "list": {
+      "empty": "Todavía no has subido protocolos.",
+      "pages": "{count, plural, one {# página} other {# páginas}}",
+      "chunks": "{count, plural, one {# fragmento} other {# fragmentos}}",
+      "demo": "Demostración",
+      "delete": "Eliminar",
+      "deleteConfirm": "¿Eliminar «{title}» y su índice?",
+      "deleted": "Protocolo eliminado.",
+      "uploadedAt": "Subido el {date}",
+      "original": "Original"
+    },
+    "status": {
+      "processing": "Indexando",
+      "ready": "Listo",
+      "failed": "Error"
+    },
+    "errors": {
+      "unauthorized": "Debes iniciar sesión.",
+      "no_file": "No se recibió ningún archivo.",
+      "too_large": "El archivo supera 10 MB.",
+      "invalid_type": "Formato no admitido: usa PDF, DOCX, MD o TXT.",
+      "unsafe_archive": "El documento Word está dañado o es sospechoso.",
+      "invalid_request": "Solicitud no válida.",
+      "upload_failed": "No se pudo subir el protocolo.",
+      "not_found": "No encontrado.",
+      "extraction_failed": "No se pudo leer el documento.",
+      "empty_text": "El documento no tiene texto extraíble (¿PDF escaneado?).",
+      "embedding_failed": "No se pudieron generar los embeddings (¿modelo no disponible?).",
+      "storage_failed": "Error al guardar el índice."
+    },
+    "search": {
+      "title": "Probar la búsqueda",
+      "description": "Comprueba qué fragmentos recuperaría el asistente para una pregunta.",
+      "placeholder": "p. ej. ¿qué hago ante una hipotensión?",
+      "submit": "Buscar",
+      "empty": "Sin resultados relevantes: el asistente respondería «no lo sé».",
+      "mode": "Modo vectorial: {mode}",
+      "score": "RRF {score}",
+      "vector": "vectorial #{rank}",
+      "lexical": "léxica #{rank}"
+    },
+    "citations": {
+      "page": "p. {page}",
+      "section": "§ {section}",
+      "fragment": "fragmento",
+      "sources": "{count, plural, one {Fuente consultada} other {Fuentes consultadas}}",
+      "noResults": "No encontré información sobre «{query}» en tus protocolos.",
+      "open": "Ver fragmento de {title}, {location}",
+      "loading": "Cargando fragmento...",
+      "loadError": "No se pudo cargar el fragmento.",
+      "verifyNotice": "Fragmento recuperado automáticamente. Verifica siempre en el documento original vigente."
+    }
+  },
+  "sessionRecords": {
+    "title": "Hojas de sesión",
+    "description": "Registros estructurados de sesiones de hemodiálisis creados a partir de tus notas. Solo iniciales o seudónimos.",
+    "empty": "Aún no hay hojas de sesión. Pega tus notas abajo o pídeselo al asistente en el chat.",
+    "noAlias": "sin identificar",
+    "missing": "Faltan",
+    "unverified": "Descartados por no constar en las notas",
+    "reviewNotice": "Revisa la hoja antes de usarla: los campos ausentes quedan vacíos y nunca se inventan.",
+    "exportCsv": "Exportar CSV",
+    "print": "Imprimir",
+    "back": "Volver a las hojas",
+    "delete": "Eliminar",
+    "deleted": "Hoja eliminada.",
+    "deleteConfirm": "¿Eliminar esta hoja de sesión?",
+    "table": {
+      "date": "Fecha",
+      "patient": "Paciente",
+      "machine": "Máquina",
+      "weights": "Pesos pre/post/seco",
+      "uf": "UF (mL)",
+      "alerts": "Alertas",
+      "open": "Ver"
+    },
+    "detail": {
+      "title": "Hoja de sesión de hemodiálisis",
+      "createdAt": "Registrada el {date}",
+      "calculations": "Cálculos automáticos",
+      "alerts": "Alertas",
+      "vitals": "Controles de PA y FC",
+      "time": "Momento",
+      "bp": "PA (mmHg)",
+      "hr": "FC (lpm)",
+      "events": "Incidencias",
+      "noEvents": "Sin incidencias registradas.",
+      "sourceNotes": "Notas originales (redactadas)",
+      "signature": "Firma de enfermería",
+      "noData": "—"
+    },
+    "create": {
+      "title": "Crear desde notas",
+      "label": "Notas de la sesión",
+      "placeholder": "p. ej. J.P., máquina 7, FAV izquierda. Peso pre 72,5 kg, post 70,4, seco 70. 4 h. UF 2300 mL. PA pre 140/80...",
+      "submit": "Estructurar y guardar",
+      "submitting": "Procesando...",
+      "error": "No se pudo crear la hoja. Inténtalo de nuevo.",
+      "redacted": "{count, plural, one {Se ocultó # dato personal} other {Se ocultaron # datos personales}} antes de procesar las notas."
+    },
+    "card": {
+      "title": "Hoja de sesión guardada · {alias}",
+      "open": "Abrir hoja"
+    },
+    "toolErrors": {
+      "unauthorized": "Debes iniciar sesión para guardar hojas de sesión.",
+      "extraction_failed": "No se pudo estructurar la hoja de sesión."
+    },
+    "fields": {
+      "patientAlias": "Paciente (iniciales)",
+      "sessionDate": "Fecha",
+      "machine": "Máquina",
+      "dialyzer": "Dializador",
+      "vascularAccess": "Acceso vascular",
+      "preWeightKg": "Peso pre (kg)",
+      "postWeightKg": "Peso post (kg)",
+      "dryWeightKg": "Peso seco (kg)",
+      "previousPostWeightKg": "Peso post anterior (kg)",
+      "durationHours": "Duración (h)",
+      "ufGoalMl": "UF objetivo (mL)",
+      "ufAchievedMl": "UF conseguida (mL)",
+      "fluidsAdministeredMl": "Líquidos administrados (mL)",
+      "bunPreMgDl": "BUN pre (mg/dL)",
+      "bunPostMgDl": "BUN post (mg/dL)",
+      "heparin": "Heparina",
+      "vitals": "PA / FC",
+      "events": "Incidencias",
+      "notes": "Observaciones"
+    },
+    "csv": {
+      "patientAlias": "Paciente (iniciales)",
+      "sessionDate": "Fecha",
+      "machine": "Máquina",
+      "dialyzer": "Dializador",
+      "vascularAccess": "Acceso vascular",
+      "preWeightKg": "Peso pre (kg)",
+      "postWeightKg": "Peso post (kg)",
+      "dryWeightKg": "Peso seco (kg)",
+      "previousPostWeightKg": "Peso post anterior (kg)",
+      "durationHours": "Duración (h)",
+      "ufGoalMl": "UF objetivo (mL)",
+      "ufAchievedMl": "UF conseguida (mL)",
+      "fluidsAdministeredMl": "Líquidos administrados (mL)",
+      "bunPreMgDl": "BUN pre (mg/dL)",
+      "bunPostMgDl": "BUN post (mg/dL)",
+      "heparin": "Heparina",
+      "vitals": "PA / FC",
+      "events": "Incidencias",
+      "notes": "Observaciones",
+      "createdAt": "Creada",
+      "idwg": "GID (%)",
+      "ufRate": "TUF (mL/kg/h)",
+      "urr": "URR (%)",
+      "ktv": "spKt/V",
+      "fluidBalance": "Balance (mL)",
+      "alerts": "Alertas",
+      "missingFields": "Campos faltantes"
+    },
+    "alerts": {
+      "severity": {
+        "critical": "Crítico",
+        "warning": "Atención",
+        "info": "Información"
+      },
+      "redFlag": "signos de alarma en las incidencias ({categories}): aplica el protocolo de emergencias y avisa al médico.",
+      "hypotensionNadir": "PAS mínima de {nadir} mmHg (< 90): hipotensión intradiálisis.",
+      "systolicDrop": "descenso de la PAS de {drop} mmHg respecto a la previa (≥ 20).",
+      "heartRate": "FC de {rate} lpm fuera de 50–120 {time}.",
+      "aboveDryWeight": "peso post {difference} kg por encima del peso seco.",
+      "ufNotAchieved": "UF conseguida ({achieved} mL) por debajo del 90 % del objetivo ({goal} mL).",
+      "calc": {
+        "idwg": "ganancia interdialítica de {value} {unit} (> 4 % del peso seco).",
+        "ufRate": "tasa de UF de {value} {unit} (> 13 mL/kg/h).",
+        "urr": "URR de {value} {unit} (< 65 %).",
+        "ktv": "spKt/V de {value} (< 1,2).",
+        "fluidBalance": "balance hídrico de {value} {unit}."
+      }
+    }
   }
 }

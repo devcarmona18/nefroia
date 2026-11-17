@@ -1,8 +1,14 @@
 "use client";
 
-import { PanelLeftIcon, PenSquareIcon, TrashIcon } from "lucide-react";
+import {
+  BookOpenTextIcon,
+  ClipboardListIcon,
+  PanelLeftIcon,
+  PenSquareIcon,
+  TrashIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
@@ -45,6 +51,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 export function AppSidebar({ user }: { user: User | undefined }) {
   const t = useTranslations("sidebar");
   const router = useRouter();
+  const pathname = usePathname();
   const { setOpenMobile, toggleSidebar } = useSidebar();
   const { mutate } = useSWRConfig();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
@@ -128,6 +135,40 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   >
                     <PenSquareIcon className="size-4" />
                     <span className="font-medium">{t("newChat")}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    className="rounded-lg text-[13px]"
+                    isActive={pathname.startsWith("/protocolos")}
+                    tooltip={t("protocols")}
+                  >
+                    <Link
+                      data-testid="nav-protocols"
+                      href="/protocolos"
+                      onClick={closeMobile}
+                    >
+                      <BookOpenTextIcon className="size-4" />
+                      <span>{t("protocols")}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    className="rounded-lg text-[13px]"
+                    isActive={pathname.startsWith("/hojas")}
+                    tooltip={t("sessionRecords")}
+                  >
+                    <Link
+                      data-testid="nav-session-records"
+                      href="/hojas"
+                      onClick={closeMobile}
+                    >
+                      <ClipboardListIcon className="size-4" />
+                      <span>{t("sessionRecords")}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 {user ? (

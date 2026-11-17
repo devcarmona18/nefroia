@@ -2,6 +2,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
+import { CALCULATOR_TOOL_NAMES } from "@/lib/ai/tools/calculator-names";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
@@ -15,13 +16,30 @@ import {
   ToolOutput,
 } from "../ai-elements/tool";
 import { Logo } from "../brand/logo";
+import { CalculationCard } from "../clinical/calculation-card";
+import { ProtocolSearchResult } from "../clinical/protocol-citations";
+import { RedactionNotice, RedFlagAlert } from "../clinical/safety-notices";
+import { SessionRecordCard } from "../clinical/session-record-card";
 import { useDataStream } from "./data-stream-provider";
 import { DocumentToolResult } from "./document";
 import { DocumentPreview } from "./document-preview";
 import { MessageActions } from "./message-actions";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
-import { Weather } from "./weather";
+
+const clinicalWidth = "w-[min(100%,480px)]";
+
+type MessagePart = ChatMessage["parts"][number];
+type CalculatorPart = Extract<
+  MessagePart,
+  { type: `tool-${(typeof CALCULATOR_TOOL_NAMES)[number]}` }
+>;
+
+function isCalculatorPart(part: MessagePart): part is CalculatorPart {
+  return (CALCULATOR_TOOL_NAMES as readonly string[]).includes(
+    part.type.replace(/^tool-/, "")
+  );
+}
 
 function WaitingText() {
   const t = useTranslations("message");
@@ -192,66 +210,86 @@ const PurePreviewMessage = ({
       );
     }
 
-    if (type === "tool-getWeather") {
-      const { toolCallId, state } = part;
-      const approvalId = (part as { approval?: { id: string } }).approval?.id;
-      const isDenied =
-        state === "output-denied" ||
-        (state === "approval-responded" &&
-          (part as { approval?: { approved?: boolean } }).approval?.approved ===
-            false);
-      const widthClass = "w-[min(100%,450px)]";
+    if (type === "data-redaction") {
+      return (
+        <RedactionNotice
+          counts={part.data.counts}
+          key={key}
+          total={part.data.total}
+        />
+      );
+    }
 
+    if (type === "data-red-flags") {
+      return <RedFlagAlert categories={part.data.categories} key={key} />;
+    }
+
+    if (isCalculatorPart(part)) {
+      const { toolCallId, state } = part;
       if (state === "output-available") {
         return (
-          <div className={widthClass} key={toolCallId}>
-            <Weather weatherAtLocation={part.output} />
+          <div className={clinicalWidth} key={toolCallId}>
+            <CalculationCard outcome={part.output} />
           </div>
         );
       }
-
-      if (isDenied) {
-        return (
-          <div className={widthClass} key={toolCallId}>
-            <Tool className="w-full" defaultOpen={true}>
-              <ToolHeader state="output-denied" type="tool-getWeather" />
-              <ToolContent>
-                <div className="px-4 py-3 text-muted-foreground text-sm">
-                  {t("weatherDenied")}
-                </div>
-              </ToolContent>
-            </Tool>
-          </div>
-        );
-      }
-
-      if (state === "approval-responded") {
-        return (
-          <div className={widthClass} key={toolCallId}>
-            <Tool className="w-full" defaultOpen={true}>
-              <ToolHeader state={state} type="tool-getWeather" />
-              <ToolContent>
-                <ToolInput input={part.input} />
-              </ToolContent>
-            </Tool>
-          </div>
-        );
-      }
-
       return (
-        <div className={widthClass} key={toolCallId}>
-          <Tool className="w-full" defaultOpen={true}>
-            <ToolHeader state={state} type="tool-getWeather" />
+        <div className={clinicalWidth} key={toolCallId}>
+          <Tool className="w-full" defaultOpen={state === "output-error"}>
+            <ToolHeader state={state} type={part.type} />
             <ToolContent>
-              {(state === "input-available" ||
-                state === "approval-requested") && (
+              {state === "output-error" ? (
+                <ToolOutput errorText={part.errorText} output={undefined} />
+              ) : (
                 <ToolInput input={part.input} />
               )}
-              {state === "approval-requested" && approvalId && (
-                <ToolApprovalActions
-                  addToolApprovalResponse={addToolApprovalResponse}
-                  approvalId={approvalId}
-                />
+            </ToolContent>
+          </Tool>
+        </div>
+      );
+    }
+
+    if (type === "tool-buscarProtocolos") {
+      const { toolCallId, state } = part;
+      if (state === "output-available") {
+        return (
+          <div className="w-full" key={toolCallId}>
+            <ProtocolSearchResult output={part.output} />
+          </div>
+        );
+      }
+      return (
+        <div className={clinicalWidth} key={toolCallId}>
+          <Tool className="w-full" defaultOpen={false}>
+            <ToolHeader state={state} type={type} />
+            <ToolContent>
+              {state === "output-error" ? (
+                <ToolOutput errorText={part.errorText} output={undefined} />
+              ) : (
+                <ToolInput input={part.input} />
+              )}
+            </ToolContent>
+          </Tool>
+        </div>
+      );
+    }
+
+    if (type === "tool-crearHojaSesion") {
+      const { toolCallId, state } = part;
+      if (state === "output-available") {
+        return (
+          <div className="w-[min(100%,640px)]" key={toolCallId}>
+            <SessionRecordCard output={part.output} />
+          </div>
+        );
+      }
+      return (
+        <div className={clinicalWidth} key={toolCallId}>
+          <Tool className="w-full" defaultOpen={state === "output-error"}>
+            <ToolHeader state={state} type={type} />
+            <ToolContent>
+              {state === "output-error" && (
+                <ToolOutput errorText={part.errorText} output={undefined} />
               )}
             </ToolContent>
           </Tool>
@@ -339,6 +377,34 @@ const PurePreviewMessage = ({
             )}
           </ToolContent>
         </Tool>
+      );
+    }
+
+    // Herramientas que requieran aprobación (needsApproval) en el futuro.
+    if (
+      type.startsWith("tool-") &&
+      "state" in part &&
+      part.state === "approval-requested"
+    ) {
+      const approvalId = (part as { approval?: { id: string } }).approval?.id;
+      return (
+        <div className={clinicalWidth} key={key}>
+          <Tool className="w-full" defaultOpen={true}>
+            <ToolHeader
+              state={part.state}
+              type={type as `tool-${string}` as never}
+            />
+            <ToolContent>
+              {"input" in part ? <ToolInput input={part.input} /> : null}
+              {approvalId ? (
+                <ToolApprovalActions
+                  addToolApprovalResponse={addToolApprovalResponse}
+                  approvalId={approvalId}
+                />
+              ) : null}
+            </ToolContent>
+          </Tool>
+        </div>
       );
     }
 

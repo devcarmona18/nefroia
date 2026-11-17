@@ -22,7 +22,7 @@ async function extractPdf(bytes: Uint8Array): Promise<ExtractedDocument> {
       })),
     };
   } finally {
-    await pdf.destroy();
+    await (pdf as { destroy?: () => Promise<void> }).destroy?.();
   }
 }
 

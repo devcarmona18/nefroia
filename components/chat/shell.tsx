@@ -9,6 +9,7 @@ import {
 } from "@/hooks/use-artifact";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { ClinicalDisclaimer } from "../clinical/safety-notices";
 import { Artifact } from "./artifact";
 import { ChatHeader } from "./chat-header";
 import { DataStreamHandler } from "./data-stream-handler";
@@ -121,7 +122,7 @@ export function ChatShell() {
               votes={votes}
             />
 
-            <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+            <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl flex-col gap-1.5 border-t-0 bg-background px-2 pb-2 md:px-4 md:pb-3">
               {!isReadonly && (
                 <MultimodalInput
                   attachments={attachments}
@@ -144,6 +145,7 @@ export function ChatShell() {
                   stop={stop}
                 />
               )}
+              <ClinicalDisclaimer className="justify-center px-2 text-center" />
             </div>
           </div>
         </div>

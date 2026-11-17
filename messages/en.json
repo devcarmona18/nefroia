@@ -52,7 +52,10 @@
     "deleteAllTitle": "Delete all chats?",
     "deleteAllDescription": "This action cannot be undone. This will permanently delete all your chats.",
     "deleteAllConfirm": "Delete all",
-    "allChatsDeleted": "All chats deleted"
+    "allChatsDeleted": "All chats deleted",
+    "protocols": "Protocols",
+    "sessionRecords": "Session records",
+    "tools": "Clinical tools"
   },
   "history": {
     "title": "History",
@@ -92,14 +95,14 @@
   },
   "chat": {
     "greeting": "How can I help you today?",
-    "greetingSubtitle": "Ask renal nursing questions, draft notes or prepare checklists.",
+    "greetingSubtitle": "Dialysis calculators, answers grounded in your unit's protocols and session records from your notes.",
     "placeholder": "Ask anything...",
     "scrollToBottom": "Scroll to bottom",
     "suggestions": [
-      "What are the nursing care points for vascular access (AV fistula and catheter) during hemodialysis?",
-      "Create a checklist to prepare the hemodialysis machine before starting a session",
-      "Explain the most common intradialytic complications and how to act on hypotension",
-      "Help me write a nursing note for the shift handover of a hemodialysis patient"
+      "Calculate spKt/V: BUN pre 70, post 21 mg/dL, 4 h, UF 3 L, post weight 70 kg",
+      "According to our protocols, how do I manage intradialytic hypotension?",
+      "How is the post-dialysis BUN sample drawn according to the unit protocol?",
+      "Create the session record: J.P., machine 7, left AVF, pre weight 72.5, post 70.4, dry 70, 4 h, UF 2300 mL, BP pre 140/80"
     ]
   },
   "chatApi": {
@@ -165,7 +168,6 @@
     "waiting": "Waiting...",
     "deny": "Deny",
     "allow": "Allow",
-    "weatherDenied": "Weather lookup was denied.",
     "errorCreating": "Error creating document",
     "errorUpdating": "Error updating document",
     "error": "Error",
@@ -254,14 +256,6 @@
     "initializing": "Initializing...",
     "output": "output"
   },
-  "weather": {
-    "hourlyForecast": "Hourly forecast",
-    "now": "Now",
-    "high": "H",
-    "low": "L",
-    "sunrise": "Sunrise",
-    "sunset": "Sunset"
-  },
   "reasoning": {
     "thinking": "Thinking...",
     "thoughtFewSeconds": "Thought for a few seconds",
@@ -281,11 +275,17 @@
       "error": "Error"
     },
     "names": {
-      "getWeather": "Get weather",
       "createDocument": "Create document",
       "updateDocument": "Update document",
       "editDocument": "Edit document",
-      "requestSuggestions": "Request suggestions"
+      "requestSuggestions": "Request suggestions",
+      "calcularURR": "Calculate URR",
+      "calcularKtV": "Calculate spKt/V",
+      "calcularGananciaInterdialitica": "Interdialytic weight gain",
+      "calcularTasaUltrafiltracion": "Ultrafiltration rate",
+      "calcularBalanceHidrico": "Fluid balance",
+      "buscarProtocolos": "Search protocols",
+      "crearHojaSesion": "Create session record"
     }
   },
   "errors": {
@@ -305,5 +305,320 @@
     "unauthorized_stream": "You need to sign in before continuing.",
     "forbidden_stream": "This chat belongs to another user.",
     "not_found_stream": "The requested chat was not found."
+  },
+  "clinical": {
+    "disclaimer": "Decision-support estimate. Check the input data; targets and decisions depend on the medical prescription and the unit protocol.",
+    "formulaAndReference": "Formula and reference",
+    "formula": "Formula",
+    "substitution": "With your data",
+    "reference": "Reference",
+    "invalidTitle": "Could not calculate: {calculator}",
+    "calculators": {
+      "urr": "Urea reduction ratio (URR)",
+      "ktv": "spKt/V (Daugirdas 2nd generation)",
+      "idwg": "Interdialytic weight gain",
+      "ufRate": "Ultrafiltration rate",
+      "fluidBalance": "Session fluid balance"
+    },
+    "bands": {
+      "optimal": "Target met",
+      "adequate": "Adequate",
+      "caution": "Caution",
+      "alert": "Alert",
+      "info": "Informational"
+    },
+    "interpretation": {
+      "urr": {
+        "optimal": "URR ≥ {target} %: meets the usual dose target.",
+        "adequate": "URR between {minimum} % and {target} %: meets the recommended minimum (≥ {minimum} %), below the {target} % target.",
+        "alert": "URR below the recommended minimum of {minimum} %: report it per protocol and review the sampling technique."
+      },
+      "ktv": {
+        "optimal": "spKt/V ≥ {target}: meets the target for hemodialysis {sessionsPerWeek} times a week.",
+        "adequate": "spKt/V between {minimum} and {target}: meets the minimum delivered dose, below the {target} target.",
+        "alert": "spKt/V below the minimum dose of {minimum}: notify the nephrologist and review time, flows and samples.",
+        "info": "With {sessionsPerWeek} sessions per week the 1.2/1.4 thresholds (defined for thrice-weekly HD) do not apply; interpret with the nephrologist."
+      },
+      "idwg": {
+        "adequate": "Gain ≤ {threshold} % of dry weight.",
+        "alert": "Gain above {threshold} % of dry weight (commonly used threshold): consider fluid restriction and hypotension risk.",
+        "info": "Pre-dialysis weight is lower than the previous post weight: no gain."
+      },
+      "ufRate": {
+        "optimal": "Rate ≤ {caution} mL/kg/h.",
+        "caution": "Rate between {caution} and {alert} mL/kg/h: closely monitor hemodynamic tolerance.",
+        "alert": "Rate above {alert} mL/kg/h (KDOQI 2015): associated with higher cardiovascular risk; check the prescription (session time, target weight)."
+      },
+      "fluidBalance": {
+        "negative": "Negative balance: more fluid was removed than given.",
+        "positive": "Positive balance: more fluid was given than removed.",
+        "neutral": "Neutral balance: intake equals output."
+      }
+    },
+    "details": {
+      "ratio": "R (BUN post/pre)",
+      "urr": "Equivalent URR",
+      "gainKg": "Gain",
+      "ufPerHour": "UF per hour",
+      "totalIntake": "Intake",
+      "totalOutput": "Output"
+    },
+    "fields": {
+      "preBun": "Pre-dialysis BUN",
+      "postBun": "Post-dialysis BUN",
+      "unit": "Unit",
+      "durationHours": "Duration (h)",
+      "ufLiters": "Ultrafiltration (L)",
+      "postWeightKg": "Post-dialysis weight",
+      "sessionsPerWeek": "Sessions per week",
+      "preWeightKg": "Pre-dialysis weight",
+      "previousPostWeightKg": "Previous session post weight",
+      "dryWeightKg": "Dry weight",
+      "ufVolumeMl": "UF volume (mL)",
+      "weightKg": "Weight",
+      "oralIntakeMl": "Oral intake",
+      "ivFluidsMl": "IV fluids",
+      "primingRinsebackMl": "Priming/rinseback",
+      "transfusionMl": "Transfusion",
+      "ultrafiltrationMl": "Ultrafiltration",
+      "urineMl": "Urine output",
+      "otherLossesMl": "Other losses"
+    },
+    "errors": {
+      "required": "value is missing.",
+      "not_a_number": "must be a number.",
+      "too_low": "must be at least {min} {unit}.",
+      "too_high": "cannot exceed {max} {unit} (right unit?).",
+      "post_bun_not_lower": "post-dialysis BUN must be lower than pre-dialysis BUN.",
+      "ktv_out_of_domain": "data fall outside the formula's domain (R − 0.008·t ≤ 0); check BUN and duration.",
+      "implausible_weight_change": "the weight change between sessions is implausible; check the weights.",
+      "no_fluid_data": "enter at least one intake or output.",
+      "invalid_unit": "unsupported unit (mg/dL or mmol/L).",
+      "invalid": "invalid value."
+    }
+  },
+  "safety": {
+    "disclaimer": "NefroIA is a decision-support tool: it does not diagnose or prescribe. Follow your unit protocol and medical orders. Do not enter patient-identifying data.",
+    "redaction": {
+      "body": "{count, plural, one {# personal data item was} other {# personal data items were}} hidden ({types}) before sending the message to the model. Use initials or pseudonyms.",
+      "types": {
+        "email": "email",
+        "phone": "phone",
+        "medicalRecord": "medical record",
+        "birthDate": "date of birth",
+        "nationalId": "ID number",
+        "name": "name"
+      }
+    },
+    "redFlags": {
+      "title": "Possible emergency: act now",
+      "body": "Follow the unit emergency protocol immediately, notify the physician on duty and call for help. Do not wait for the assistant's answer.",
+      "detected": "Detected: {categories}.",
+      "categories": {
+        "cardiacArrest": "cardiac arrest",
+        "chestPain": "chest pain",
+        "consciousness": "altered consciousness",
+        "breathing": "severe breathing difficulty",
+        "severeHypotension": "severe hypotension",
+        "bleeding": "bleeding / needle dislodgement",
+        "airEmbolism": "air embolism",
+        "anaphylaxis": "anaphylactic reaction",
+        "seizure": "seizures",
+        "hemolysis": "hemolysis",
+        "hyperkalemia": "hyperkalemia"
+      }
+    }
+  },
+  "protocols": {
+    "title": "Unit protocols",
+    "description": "Upload your unit's protocols (PDF, Word, Markdown or text). NefroIA will answer citing them. Only you can see your documents.",
+    "upload": {
+      "label": "Upload protocol",
+      "hint": "PDF, DOCX, MD or TXT · max 10 MB",
+      "titleLabel": "Title (optional)",
+      "titlePlaceholder": "The file name will be used",
+      "submit": "Upload and index",
+      "uploading": "Uploading...",
+      "success": "Protocol received. Indexing in progress.",
+      "noPii": "Do not upload documents containing patient data."
+    },
+    "list": {
+      "empty": "You have not uploaded any protocols yet.",
+      "pages": "{count, plural, one {# page} other {# pages}}",
+      "chunks": "{count, plural, one {# chunk} other {# chunks}}",
+      "demo": "Demo",
+      "delete": "Delete",
+      "deleteConfirm": "Delete “{title}” and its index?",
+      "deleted": "Protocol deleted.",
+      "uploadedAt": "Uploaded on {date}",
+      "original": "Original"
+    },
+    "status": {
+      "processing": "Indexing",
+      "ready": "Ready",
+      "failed": "Error"
+    },
+    "errors": {
+      "unauthorized": "You must sign in.",
+      "no_file": "No file received.",
+      "too_large": "The file exceeds 10 MB.",
+      "invalid_type": "Unsupported format: use PDF, DOCX, MD or TXT.",
+      "unsafe_archive": "The Word document is damaged or suspicious.",
+      "invalid_request": "Invalid request.",
+      "upload_failed": "Could not upload the protocol.",
+      "not_found": "Not found.",
+      "extraction_failed": "The document could not be read.",
+      "empty_text": "The document has no extractable text (scanned PDF?).",
+      "embedding_failed": "Embeddings could not be generated (model unavailable?).",
+      "storage_failed": "Error saving the index."
+    },
+    "search": {
+      "title": "Try the search",
+      "description": "See which chunks the assistant would retrieve for a question.",
+      "placeholder": "e.g. what do I do for hypotension?",
+      "submit": "Search",
+      "empty": "No relevant results: the assistant would answer “I don't know”.",
+      "mode": "Vector mode: {mode}",
+      "score": "RRF {score}",
+      "vector": "vector #{rank}",
+      "lexical": "lexical #{rank}"
+    },
+    "citations": {
+      "page": "p. {page}",
+      "section": "§ {section}",
+      "fragment": "chunk",
+      "sources": "{count, plural, one {Source consulted} other {Sources consulted}}",
+      "noResults": "I found no information about “{query}” in your protocols.",
+      "open": "View chunk from {title}, {location}",
+      "loading": "Loading chunk...",
+      "loadError": "Could not load the chunk.",
+      "verifyNotice": "Automatically retrieved chunk. Always check the current original document."
+    }
+  },
+  "sessionRecords": {
+    "title": "Session records",
+    "description": "Structured hemodialysis session records created from your notes. Initials or pseudonyms only.",
+    "empty": "No session records yet. Paste your notes below or ask the assistant in the chat.",
+    "noAlias": "unidentified",
+    "missing": "Missing",
+    "unverified": "Discarded because they were not in the notes",
+    "reviewNotice": "Review the record before using it: absent fields stay empty and are never invented.",
+    "exportCsv": "Export CSV",
+    "print": "Print",
+    "back": "Back to records",
+    "delete": "Delete",
+    "deleted": "Record deleted.",
+    "deleteConfirm": "Delete this session record?",
+    "table": {
+      "date": "Date",
+      "patient": "Patient",
+      "machine": "Machine",
+      "weights": "Weights pre/post/dry",
+      "uf": "UF (mL)",
+      "alerts": "Alerts",
+      "open": "View"
+    },
+    "detail": {
+      "title": "Hemodialysis session record",
+      "createdAt": "Recorded on {date}",
+      "calculations": "Automatic calculations",
+      "alerts": "Alerts",
+      "vitals": "BP and HR checks",
+      "time": "Time",
+      "bp": "BP (mmHg)",
+      "hr": "HR (bpm)",
+      "events": "Events",
+      "noEvents": "No events recorded.",
+      "sourceNotes": "Original notes (redacted)",
+      "signature": "Nurse signature",
+      "noData": "—"
+    },
+    "create": {
+      "title": "Create from notes",
+      "label": "Session notes",
+      "placeholder": "e.g. J.P., machine 7, left AVF. Pre weight 72.5 kg, post 70.4, dry 70. 4 h. UF 2300 mL. BP pre 140/80...",
+      "submit": "Structure and save",
+      "submitting": "Processing...",
+      "error": "The record could not be created. Please try again.",
+      "redacted": "{count, plural, one {# personal data item was} other {# personal data items were}} hidden before processing the notes."
+    },
+    "card": {
+      "title": "Session record saved · {alias}",
+      "open": "Open record"
+    },
+    "toolErrors": {
+      "unauthorized": "You must sign in to save session records.",
+      "extraction_failed": "The session record could not be structured."
+    },
+    "fields": {
+      "patientAlias": "Patient (initials)",
+      "sessionDate": "Date",
+      "machine": "Machine",
+      "dialyzer": "Dialyzer",
+      "vascularAccess": "Vascular access",
+      "preWeightKg": "Pre weight (kg)",
+      "postWeightKg": "Post weight (kg)",
+      "dryWeightKg": "Dry weight (kg)",
+      "previousPostWeightKg": "Previous post weight (kg)",
+      "durationHours": "Duration (h)",
+      "ufGoalMl": "UF goal (mL)",
+      "ufAchievedMl": "UF achieved (mL)",
+      "fluidsAdministeredMl": "Fluids given (mL)",
+      "bunPreMgDl": "BUN pre (mg/dL)",
+      "bunPostMgDl": "BUN post (mg/dL)",
+      "heparin": "Heparin",
+      "vitals": "BP / HR",
+      "events": "Events",
+      "notes": "Notes"
+    },
+    "csv": {
+      "patientAlias": "Patient (initials)",
+      "sessionDate": "Date",
+      "machine": "Machine",
+      "dialyzer": "Dialyzer",
+      "vascularAccess": "Vascular access",
+      "preWeightKg": "Pre weight (kg)",
+      "postWeightKg": "Post weight (kg)",
+      "dryWeightKg": "Dry weight (kg)",
+      "previousPostWeightKg": "Previous post weight (kg)",
+      "durationHours": "Duration (h)",
+      "ufGoalMl": "UF goal (mL)",
+      "ufAchievedMl": "UF achieved (mL)",
+      "fluidsAdministeredMl": "Fluids given (mL)",
+      "bunPreMgDl": "BUN pre (mg/dL)",
+      "bunPostMgDl": "BUN post (mg/dL)",
+      "heparin": "Heparin",
+      "vitals": "BP / HR",
+      "events": "Events",
+      "notes": "Notes",
+      "createdAt": "Created",
+      "idwg": "IDWG (%)",
+      "ufRate": "UFR (mL/kg/h)",
+      "urr": "URR (%)",
+      "ktv": "spKt/V",
+      "fluidBalance": "Balance (mL)",
+      "alerts": "Alerts",
+      "missingFields": "Missing fields"
+    },
+    "alerts": {
+      "severity": {
+        "critical": "Critical",
+        "warning": "Warning",
+        "info": "Info"
+      },
+      "redFlag": "red flags in the events ({categories}): apply the emergency protocol and notify the physician.",
+      "hypotensionNadir": "nadir SBP of {nadir} mmHg (< 90): intradialytic hypotension.",
+      "systolicDrop": "SBP drop of {drop} mmHg from baseline (≥ 20).",
+      "heartRate": "HR of {rate} bpm outside 50–120 {time}.",
+      "aboveDryWeight": "post weight {difference} kg above dry weight.",
+      "ufNotAchieved": "UF achieved ({achieved} mL) below 90 % of the goal ({goal} mL).",
+      "calc": {
+        "idwg": "interdialytic weight gain of {value} {unit} (> 4 % of dry weight).",
+        "ufRate": "UF rate of {value} {unit} (> 13 mL/kg/h).",
+        "urr": "URR of {value} {unit} (< 65 %).",
+        "ktv": "spKt/V of {value} (< 1.2).",
+        "fluidBalance": "fluid balance of {value} {unit}."
+      }
+    }
   }
 }
