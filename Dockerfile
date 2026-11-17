@@ -33,10 +33,15 @@ WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
-    PORT=3000
+    PORT=3000 \
+    EMBEDDING_CACHE_DIR=/app/.cache/transformers
 
+# Caché escribible del modelo de embeddings local (se descarga en el primer
+# uso; para entornos sin red, monta un volumen ya poblado en esta ruta).
 RUN groupadd --system --gid 1001 nodejs \
-    && useradd --system --uid 1001 --gid nodejs nextjs
+    && useradd --system --uid 1001 --gid nodejs nextjs \
+    && mkdir -p /app/.cache/transformers \
+    && chown -R nextjs:nodejs /app/.cache
 
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
