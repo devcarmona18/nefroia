@@ -196,7 +196,9 @@ export const protocolDocument = pgTable(
   {
     chunkCount: integer("chunkCount").notNull().default(0),
     contentType: varchar("contentType", { length: 128 }).notNull(),
-    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    createdAt: timestamp("createdAt", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     /** Modelo de embeddings con el que se indexó (no se mezclan modelos). */
     embeddingModel: varchar("embeddingModel", { length: 128 }),
     /** Código de error traducible (`protocols.errors.*`) si status = failed. */
@@ -212,7 +214,9 @@ export const protocolDocument = pgTable(
       .notNull()
       .default("processing"),
     title: text("title").notNull(),
-    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     userId: uuid("userId")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -288,7 +292,9 @@ export const sessionRecord = pgTable(
     bunPreMgDl: real("bunPreMgDl"),
     calculations: jsonb("calculations").notNull().default(sql`'[]'::jsonb`),
     chatId: uuid("chatId"),
-    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    createdAt: timestamp("createdAt", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     dialyzer: text("dialyzer"),
     dryWeightKg: real("dryWeightKg"),
     durationHours: real("durationHours"),

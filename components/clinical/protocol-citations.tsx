@@ -70,8 +70,9 @@ export function ChunkDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            {meta ? label(meta) : null}
-            {meta?.heading ? ` · ${meta.heading}` : null}
+            {meta?.page === null || meta?.page === undefined
+              ? (meta?.heading ?? null)
+              : [label(meta), meta.heading].filter(Boolean).join(" · ")}
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (

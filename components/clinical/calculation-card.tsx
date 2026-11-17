@@ -1,7 +1,7 @@
 "use client";
 
 import { CalculatorIcon, TriangleAlertIcon } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type {
   CalculationIssue,
   CalculationOutcome,
@@ -15,6 +15,15 @@ function useNumber() {
   const format = useFormatter();
   return (value: number, digits = 2) =>
     format.number(value, { maximumFractionDigits: digits });
+}
+
+/**
+ * Las fórmulas se escriben con coma decimal y la sustitución con los valores
+ * numéricos tal cual: se unifica el separador según el idioma.
+ */
+export function localizeDecimals(text: string, locale: string) {
+  const separator = locale.startsWith("es") ? "," : ".";
+  return text.replace(/(\d)[.,](\d)/g, `$1${separator}$2`);
 }
 
 function unitSuffix(unit: string) {
@@ -32,8 +41,15 @@ export function CalculationResultView({
   compact?: boolean;
 }) {
   const t = useTranslations("clinical");
+  const locale = useLocale();
   const formatNumber = useNumber();
   const titleId = `calc-${result.calculator}-title`;
+  const interpretationParams = Object.fromEntries(
+    Object.entries(result.interpretationParams).map(([key, value]) => [
+      key,
+      formatNumber(value),
+    ])
+  );
 
   return (
     <section
@@ -72,10 +88,7 @@ export function CalculationResultView({
         )}
         data-testid="calculation-interpretation"
       >
-        {t(
-          `interpretation.${result.interpretationKey}`,
-          result.interpretationParams
-        )}
+        {t(`interpretation.${result.interpretationKey}`, interpretationParams)}
       </p>
 
       {result.details.length > 0 && (
@@ -106,13 +119,13 @@ export function CalculationResultView({
             <p>
               <span className="font-medium">{t("formula")}: </span>
               <code className="rounded bg-muted px-1 py-0.5">
-                {result.formula}
+                {localizeDecimals(result.formula, locale)}
               </code>
             </p>
             <p>
               <span className="font-medium">{t("substitution")}: </span>
               <code className="rounded bg-muted px-1 py-0.5">
-                {result.substitution}
+                {localizeDecimals(result.substitution, locale)}
               </code>
             </p>
             <p>

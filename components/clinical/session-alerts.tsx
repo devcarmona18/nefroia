@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertOctagonIcon, AlertTriangleIcon, InfoIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type {
   SessionAlert,
   SessionAlertSeverity,
@@ -25,6 +25,7 @@ const SEVERITY_ICONS = {
 export function SessionAlertList({ alerts }: { alerts: SessionAlert[] }) {
   const t = useTranslations("sessionRecords.alerts");
   const tFlags = useTranslations("safety.redFlags.categories");
+  const format = useFormatter();
   if (alerts.length === 0) {
     return null;
   }
@@ -40,7 +41,14 @@ export function SessionAlertList({ alerts }: { alerts: SessionAlert[] }) {
                   .map((category) => tFlags(category))
                   .join(", "),
               }
-            : alert.params;
+            : Object.fromEntries(
+                Object.entries(alert.params).map(([name, value]) => [
+                  name,
+                  typeof value === "number"
+                    ? format.number(value, { maximumFractionDigits: 2 })
+                    : value,
+                ])
+              );
         const key = alert.code.startsWith("calc.")
           ? `calc.${alert.code.slice(5)}`
           : alert.code;
