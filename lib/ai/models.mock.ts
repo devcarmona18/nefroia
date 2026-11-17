@@ -122,6 +122,10 @@ export const MOCK_SESSION_EXTRACTION = {
   ],
 };
 
+// Retardo entre fragmentos: deja ver el estado "generando" (botón detener)
+// incluso contra el build de producción, donde todo lo demás es inmediato.
+const CHUNK_DELAY_MS = 40;
+
 function streamChunks(chunks: unknown[]) {
   return new ReadableStream({
     async start(controller) {
@@ -129,7 +133,7 @@ function streamChunks(chunks: unknown[]) {
         controller.enqueue(chunk);
         // biome-ignore lint/performance/noAwaitInLoops: simula streaming
         await new Promise((resolve) => {
-          setTimeout(resolve, 10);
+          setTimeout(resolve, CHUNK_DELAY_MS);
         });
       }
       controller.close();

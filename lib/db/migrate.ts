@@ -13,7 +13,11 @@ const runMigrate = async () => {
     process.exit(0);
   }
 
-  const connection = postgres(process.env.POSTGRES_URL, { max: 1 });
+  const connection = postgres(process.env.POSTGRES_URL, {
+    max: 1,
+    // Avisos compactos (p. ej. "pgvector no está instalado" de la 0003).
+    onnotice: (notice) => console.log(`NOTICE: ${notice.message}`),
+  });
   const db = drizzle(connection);
 
   console.log("Running migrations...");
