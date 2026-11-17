@@ -5,6 +5,7 @@ allowBuilds:
   "@parcel/watcher": false
   "@swc/core": false
   protobufjs: false
+  onnxruntime-node: false
 minimumReleaseAgeExclude:
   - "@ai-sdk/gateway@4.0.146"
   - "@ai-sdk/otel@1.0.173"
