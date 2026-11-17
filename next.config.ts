@@ -8,16 +8,13 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const nextConfig: NextConfig = {
   ...(basePath ? { basePath } : {}),
-  cacheComponents: true,
   devIndicators: false,
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
   experimental: {
     appNewScrollHandler: true,
-    cachedNavigations: true,
     inlineCss: true,
-    prefetchInlining: true,
     turbopackFileSystemCacheForDev: true,
   },
   logging: {

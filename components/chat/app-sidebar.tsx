@@ -151,6 +151,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
           <div className="px-2 group-data-[collapsible=icon]:hidden">
             <LanguageSwitcher />
           </div>
+          <div className="hidden justify-center group-data-[collapsible=icon]:flex">
+            <LanguageSwitcher compact />
+          </div>
           {user ? <SidebarUserNav user={user} /> : null}
         </SidebarFooter>
         <SidebarRail />

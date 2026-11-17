@@ -47,7 +47,7 @@ test.describe("Model Selector", () => {
     const availableModels = page.getByRole("group", { name: "Anthropic" });
     await expect(availableModels).toBeVisible();
     await expect(
-      availableModels.getByRole("option", { name: /Gemini 2\.5 Pro/ })
+      availableModels.getByRole("option", { name: /Claude Haiku 4\.5/ })
     ).toBeVisible();
     await expect(
       availableModels.getByRole("option", { name: /Claude Sonnet 4\.5/ })

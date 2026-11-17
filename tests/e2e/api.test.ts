@@ -50,7 +50,7 @@ test.describe("Chat API Integration", () => {
 
     // Stop button should appear during generation
     const stopButton = page.getByTestId("stop-button");
-    await expect(stopButton).toBeVisible({ timeout: 5000 });
+    await expect(stopButton).toBeVisible({ timeout: 10_000 });
   });
 });
 

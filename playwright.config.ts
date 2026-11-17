@@ -86,6 +86,13 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "retain-on-failure",
+
+    // Opcional: usar un Chrome ya instalado (p. ej. entornos sin descarga de Chromium).
+    ...(process.env.PLAYWRIGHT_CHROME_PATH
+      ? {
+          launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROME_PATH },
+        }
+      : {}),
   },
 
   /* Run your local dev server before starting the tests */

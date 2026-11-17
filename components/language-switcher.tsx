@@ -11,7 +11,13 @@ import { cn } from "@/lib/utils";
  * Selector de idioma (ES/EN). Guarda la elección en una cookie mediante una
  * server action y refresca la ruta para renderizar con el nuevo idioma.
  */
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function LanguageSwitcher({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const t = useTranslations("language");
   const current = useLocale();
   const router = useRouter();
@@ -30,6 +36,27 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     },
     [current, router]
   );
+
+  if (compact) {
+    // Un solo botón que cambia al otro idioma (barra lateral colapsada).
+    const next = locales.find((locale) => locale !== current) ?? locales[0];
+    return (
+      <button
+        aria-label={t(next)}
+        className={cn(
+          "rounded-md border border-border/50 px-1.5 py-1 font-medium text-[11px] text-muted-foreground uppercase transition-colors hover:text-foreground",
+          className
+        )}
+        data-locale={next}
+        data-testid={`language-${next}`}
+        disabled={isPending}
+        onClick={handleChange}
+        type="button"
+      >
+        {next}
+      </button>
+    );
+  }
 
   return (
     <fieldset

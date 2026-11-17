@@ -27,13 +27,13 @@ test.describe("Idioma", () => {
     page,
   }) => {
     await page.goto("/");
-    await page.getByTestId("language-en").first().click();
+    await page.locator("[data-testid=language-en]:visible").first().click();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
 
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
 
-    await page.getByTestId("language-es").first().click();
+    await page.locator("[data-testid=language-es]:visible").first().click();
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
   });
 });

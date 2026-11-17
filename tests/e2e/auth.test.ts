@@ -25,7 +25,7 @@ test.describe("Authentication Pages", () => {
       page.getByRole("button", { name: "Registrarme" })
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Iniciar sesión" })
+      page.getByRole("link", { name: "Inicia sesión" })
     ).toBeVisible();
   });
 
@@ -37,7 +37,7 @@ test.describe("Authentication Pages", () => {
 
   test("can navigate from register to login", async ({ page }) => {
     await page.goto("/register");
-    await page.getByRole("link", { name: "Iniciar sesión" }).click();
+    await page.getByRole("link", { name: "Inicia sesión" }).click();
     await expect(page).toHaveURL("/login");
   });
 });

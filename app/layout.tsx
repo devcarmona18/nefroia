@@ -1,5 +1,6 @@
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -43,18 +44,6 @@ export const viewport: Viewport = {
   width: "device-width",
 };
 
-const geist = Geist({
-  display: "swap",
-  subsets: ["latin"],
-  variable: "--font-geist",
-});
-
-const geistMono = Geist_Mono({
-  display: "swap",
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-});
-
 const LIGHT_THEME_COLOR = "hsl(0 0% 100%)";
 const DARK_THEME_COLOR = "hsl(240deg 10% 3.92%)";
 const THEME_COLOR_SCRIPT = `\
@@ -84,7 +73,7 @@ export default async function RootLayout({
 
   return (
     <html
-      className={`${geist.variable} ${geistMono.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
       lang={locale}
       suppressHydrationWarning
     >
