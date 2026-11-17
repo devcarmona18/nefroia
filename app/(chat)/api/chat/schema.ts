@@ -2,8 +2,9 @@ import { z } from "zod";
 import { ALLOWED_UPLOAD_TYPES } from "@/lib/storage/file-validation";
 import { keyFromAppFileUrl } from "@/lib/storage/keys";
 
+// 6000 caracteres: admite pegar las notas completas de una sesión.
 const textPartSchema = z.object({
-  text: z.string().min(1).max(2000),
+  text: z.string().min(1).max(6000),
   type: z.enum(["text"]),
 });
 

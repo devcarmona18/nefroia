@@ -1,11 +1,22 @@
 import type { InferUITool, UIMessage } from "ai";
 import { z } from "zod";
 import type { ArtifactKind } from "@/components/chat/artifact";
+import type {
+  calcularBalanceHidrico,
+  calcularGananciaInterdialitica,
+  calcularKtV,
+  calcularTasaUltrafiltracion,
+  calcularURR,
+} from "./ai/tools/clinical-calculators";
 import type { createDocument } from "./ai/tools/create-document";
-import type { getWeather } from "./ai/tools/get-weather";
+import type { editDocument } from "./ai/tools/edit-document";
 import type { requestSuggestions } from "./ai/tools/request-suggestions";
+import type { buscarProtocolos } from "./ai/tools/search-protocols";
+import type { crearHojaSesion } from "./ai/tools/session-record";
 import type { updateDocument } from "./ai/tools/update-document";
 import type { Suggestion } from "./db/schema";
+import type { RedFlagCategory } from "./safety/red-flags";
+import type { PiiType } from "./safety/redact";
 
 export const messageMetadataSchema = z.object({
   createdAt: z.string(),
@@ -13,7 +24,6 @@ export const messageMetadataSchema = z.object({
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
 
-type weatherTool = InferUITool<typeof getWeather>;
 type createDocumentTool = InferUITool<ReturnType<typeof createDocument>>;
 type updateDocumentTool = InferUITool<ReturnType<typeof updateDocument>>;
 type requestSuggestionsTool = InferUITool<
@@ -21,8 +31,17 @@ type requestSuggestionsTool = InferUITool<
 >;
 
 export type ChatTools = {
-  getWeather: weatherTool;
+  calcularURR: InferUITool<typeof calcularURR>;
+  calcularKtV: InferUITool<typeof calcularKtV>;
+  calcularGananciaInterdialitica: InferUITool<
+    typeof calcularGananciaInterdialitica
+  >;
+  calcularTasaUltrafiltracion: InferUITool<typeof calcularTasaUltrafiltracion>;
+  calcularBalanceHidrico: InferUITool<typeof calcularBalanceHidrico>;
+  buscarProtocolos: InferUITool<ReturnType<typeof buscarProtocolos>>;
+  crearHojaSesion: InferUITool<ReturnType<typeof crearHojaSesion>>;
   createDocument: createDocumentTool;
+  editDocument: InferUITool<ReturnType<typeof editDocument>>;
   updateDocument: updateDocumentTool;
   requestSuggestions: requestSuggestionsTool;
 };
@@ -48,6 +67,10 @@ export type CustomUIDataTypes = {
   finish: null;
   "chat-title": string;
   "waiting-status": WaitingStatusData;
+  /** Aviso persistente: datos personales ocultados antes de llamar al modelo. */
+  redaction: { total: number; counts: Partial<Record<PiiType, number>> };
+  /** Signos de alarma detectados en el mensaje del usuario. */
+  "red-flags": { categories: RedFlagCategory[] };
 };
 
 export type ChatMessage = UIMessage<

@@ -31,6 +31,8 @@ import type { DBMessage } from "@/lib/db/schema";
 import { AppError } from "@/lib/errors";
 import { checkIpRateLimit } from "@/lib/ratelimit";
 import { getClientIp, getRequestGeo } from "@/lib/request";
+import { detectRedFlags } from "@/lib/safety/red-flags";
+import { redactMessageParts } from "@/lib/safety/redact";
 import { resolveFileUrlsForModel } from "@/lib/storage/message-files";
 import { getStreamContext } from "@/lib/stream-context";
 import type { ChatMessage, WaitingStatusData } from "@/lib/types";
@@ -58,8 +60,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { id, message, messages, selectedChatModel, selectedVisibilityType } =
+    const { id, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
+
+    // Guardarraíl 1: redacción de datos personales ANTES de persistir el
+    // mensaje y de enviarlo a cualquier proveedor de IA.
+    const redaction = requestBody.message
+      ? redactMessageParts(requestBody.message.parts)
+      : null;
+    const message =
+      requestBody.message && redaction
+        ? { ...requestBody.message, parts: redaction.parts }
+        : requestBody.message;
+
+    // Guardarraíl 2: signos de alarma deterministas en el mensaje actual.
+    const userText =
+      message?.parts
+        .map((part) => (part.type === "text" ? part.text : ""))
+        .join("\n") ?? "";
+    const redFlags = detectRedFlags(userText);
 
     const [locale, tChat, tStatus] = await Promise.all([
       getLocale(),
@@ -211,6 +230,20 @@ export async function POST(request: Request) {
 
         writeWaitingStatus("waiting", tStatus("waiting"));
 
+        // Avisos persistentes (forman parte del mensaje del asistente).
+        if (redaction && redaction.total > 0) {
+          dataStream.write({
+            data: { counts: redaction.counts, total: redaction.total },
+            type: "data-redaction",
+          });
+        }
+        if (redFlags.length > 0) {
+          dataStream.write({
+            data: { categories: redFlags },
+            type: "data-red-flags",
+          });
+        }
+
         healthCheckTimer = setTimeout(() => {
           writeWaitingStatus("still-waiting", tStatus("stillWaiting"));
         }, HEALTH_CHECK_DELAY_MS);
@@ -232,7 +265,12 @@ export async function POST(request: Request) {
         const result = streamText({
           activeTools:
             isReasoningModel && !supportsTools ? [] : CHAT_TOOL_NAMES,
-          instructions: systemPrompt({ requestHints, supportsTools }),
+          instructions: systemPrompt({
+            redactedCount: redaction?.total ?? 0,
+            redFlags,
+            requestHints,
+            supportsTools,
+          }),
           messages: modelMessages,
           model: getLanguageModel(chatModel),
           onAbort() {
@@ -259,7 +297,12 @@ export async function POST(request: Request) {
             functionId: "stream-text",
             isEnabled: isProductionEnvironment,
           },
-          tools: getChatTools({ dataStream, modelId: chatModel, session }),
+          tools: getChatTools({
+            chatId: id,
+            dataStream,
+            modelId: chatModel,
+            session,
+          }),
         });
 
         dataStream.merge(

@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -95,6 +96,13 @@ export async function getObjectBytes(
     bytes: await result.Body.transformToByteArray(),
     contentType: result.ContentType ?? "application/octet-stream",
   };
+}
+
+export async function deleteObject(key: string) {
+  const config = requireConfig();
+  await getInternalClient(config).send(
+    new DeleteObjectCommand({ Bucket: config.bucket, Key: key })
+  );
 }
 
 /** URL de lectura prefirmada y temporal (el bucket es privado). */
