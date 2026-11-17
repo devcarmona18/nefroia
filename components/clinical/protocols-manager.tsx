@@ -8,7 +8,13 @@ import {
   UploadIcon,
 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { type FormEvent, useCallback, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
@@ -44,8 +50,16 @@ async function listFetcher(url: string): Promise<SerializedDocument[]> {
   return response.json();
 }
 
+/** true tras la hidratación: evita envíos nativos del formulario antes. */
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  return hydrated;
+}
+
 function UploadForm({ onUploaded }: { onUploaded: () => void }) {
   const t = useTranslations("protocols");
+  const hydrated = useHydrated();
   const [isUploading, setIsUploading] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -111,7 +125,11 @@ function UploadForm({ onUploaded }: { onUploaded: () => void }) {
         />
         <p className="text-muted-foreground text-xs">{t("upload.noPii")}</p>
       </div>
-      <Button className="md:mb-5" disabled={isUploading} type="submit">
+      <Button
+        className="md:mb-5"
+        disabled={!hydrated || isUploading}
+        type="submit"
+      >
         {isUploading ? (
           <Loader2Icon className="size-4 animate-spin" />
         ) : (
@@ -255,6 +273,7 @@ function SearchHitItem({
 
 function SearchTester() {
   const t = useTranslations("protocols.search");
+  const hydrated = useHydrated();
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -297,7 +316,11 @@ function SearchTester() {
           name="q"
           placeholder={t("placeholder")}
         />
-        <Button disabled={isSearching} type="submit" variant="secondary">
+        <Button
+          disabled={!hydrated || isSearching}
+          type="submit"
+          variant="secondary"
+        >
           {isSearching ? (
             <Loader2Icon className="size-4 animate-spin" />
           ) : (
@@ -334,11 +357,20 @@ export function ProtocolsManager({
   const t = useTranslations("protocols");
   const { data, mutate } = useSWR(API, listFetcher, {
     fallbackData: initialDocuments,
-    // Mientras haya documentos indexándose, se refresca su estado.
-    refreshInterval: (latest) =>
-      latest?.some((doc) => doc.status === "processing") ? 2000 : 0,
   });
   const documents = data ?? [];
+  const isProcessing = documents.some((doc) => doc.status === "processing");
+
+  // Mientras haya documentos indexándose, se consulta su estado cada 2 s.
+  useEffect(() => {
+    if (!isProcessing) {
+      return;
+    }
+    const timer = setInterval(() => {
+      mutate();
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [isProcessing, mutate]);
   const refresh = useCallback(() => {
     mutate();
   }, [mutate]);

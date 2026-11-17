@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { protocolChunk, protocolDocument } from "@/lib/db/schema";
 import { type Chunk, chunkPages, DEFAULT_CHUNK_OPTIONS } from "./chunk";
 import { cleanPages } from "./clean";
@@ -132,7 +132,7 @@ export async function ingestDocument(
           error: null,
           pages: pageCount,
           status: "ready",
-          updatedAt: new Date(),
+          updatedAt: sql`now()`,
         })
         .where(
           and(
@@ -147,7 +147,7 @@ export async function ingestDocument(
       error instanceof IngestError ? error.code : ("storage_failed" as const);
     await db
       .update(protocolDocument)
-      .set({ error: code, status: "failed", updatedAt: new Date() })
+      .set({ error: code, status: "failed", updatedAt: sql`now()` })
       .where(eq(protocolDocument.id, documentId));
     throw error instanceof IngestError
       ? error

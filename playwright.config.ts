@@ -30,6 +30,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Run tests in files in parallel */
   fullyParallel: true,
+  /* Usuario demo, protocolos y hojas de sesión sembrados (pnpm db:seed). */
+  globalSetup: "./tests/global-setup.ts",
 
   /* Configure projects */
   projects: [

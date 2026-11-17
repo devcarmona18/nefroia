@@ -230,7 +230,13 @@ export async function POST(request: Request) {
 
         writeWaitingStatus("waiting", tStatus("waiting"));
 
-        // Avisos persistentes (forman parte del mensaje del asistente).
+        // Avisos persistentes (forman parte del mensaje del asistente). El
+        // chunk "start" se emite aquí para que el cliente no cree un mensaje
+        // aparte con los avisos y otro con la respuesta del modelo.
+        const hasNotices = (redaction?.total ?? 0) > 0 || redFlags.length > 0;
+        if (hasNotices) {
+          dataStream.write({ type: "start" });
+        }
         if (redaction && redaction.total > 0) {
           dataStream.write({
             data: { counts: redaction.counts, total: redaction.total },
@@ -308,6 +314,7 @@ export async function POST(request: Request) {
         dataStream.merge(
           toUIMessageStream({
             sendReasoning: isReasoningModel,
+            sendStart: !hasNotices,
             stream: result.stream,
           })
         );

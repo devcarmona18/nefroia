@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   reactCompiler: true,
+  // Binarios nativos de ONNX Runtime (embeddings locales): no se empaquetan.
+  serverExternalPackages: ["@huggingface/transformers", "onnxruntime-node"],
 };
 
 export default withNextIntl(nextConfig);

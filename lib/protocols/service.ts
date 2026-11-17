@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   type ProtocolDocument,
@@ -106,7 +106,7 @@ export async function ingestProtocol({
     if (!(error instanceof IngestError)) {
       await db
         .update(protocolDocument)
-        .set({ error: code, status: "failed", updatedAt: new Date() })
+        .set({ error: code, status: "failed", updatedAt: sql`now()` })
         .where(eq(protocolDocument.id, doc.id));
     }
   }
