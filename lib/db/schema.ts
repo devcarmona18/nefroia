@@ -1,11 +1,16 @@
-import type { InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel, sql } from "drizzle-orm";
 import {
   boolean,
+  customType,
+  date,
   foreignKey,
   index,
+  integer,
   json,
+  jsonb,
   pgTable,
   primaryKey,
+  real,
   text,
   timestamp,
   uniqueIndex,
@@ -171,3 +176,167 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// ---------------------------------------------------------------------------
+// Protocolos de la unidad (RAG)
+// ---------------------------------------------------------------------------
+
+/** tsvector de PostgreSQL (solo lectura: columna generada). */
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return "tsvector";
+  },
+});
+
+export const PROTOCOL_STATUSES = ["processing", "ready", "failed"] as const;
+export type ProtocolStatus = (typeof PROTOCOL_STATUSES)[number];
+
+export const protocolDocument = pgTable(
+  "protocol_document",
+  {
+    chunkCount: integer("chunkCount").notNull().default(0),
+    contentType: varchar("contentType", { length: 128 }).notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    /** Modelo de embeddings con el que se indexó (no se mezclan modelos). */
+    embeddingModel: varchar("embeddingModel", { length: 128 }),
+    /** Código de error traducible (`protocols.errors.*`) si status = failed. */
+    error: varchar("error", { length: 64 }),
+    /** Clave del original en el bucket privado (null si no hay S3). */
+    fileKey: text("fileKey"),
+    filename: text("filename").notNull(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    isDemo: boolean("isDemo").notNull().default(false),
+    pages: integer("pages"),
+    sizeBytes: integer("sizeBytes").notNull().default(0),
+    status: varchar("status", { enum: PROTOCOL_STATUSES })
+      .notNull()
+      .default("processing"),
+    title: text("title").notNull(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    userCreatedIdx: index("protocol_document_userId_createdAt_idx").on(
+      table.userId,
+      table.createdAt
+    ),
+  })
+);
+
+export type ProtocolDocument = InferSelectModel<typeof protocolDocument>;
+
+export const EMBEDDING_DIMENSIONS = 384;
+
+export const protocolChunk = pgTable(
+  "protocol_chunk",
+  {
+    content: text("content").notNull(),
+    documentId: uuid("documentId")
+      .notNull()
+      .references(() => protocolDocument.id, { onDelete: "cascade" }),
+    /**
+     * Vector normalizado (L2) de 384 dimensiones como real[]: funciona en
+     * cualquier PostgreSQL. Donde exista pgvector, la migración 0003 añade la
+     * columna generada `embeddingVec vector(384)` con índice HNSW (coseno).
+     */
+    embedding: real("embedding").array().notNull(),
+    heading: text("heading"),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    ordinal: integer("ordinal").notNull(),
+    page: integer("page"),
+    /** Texto en minúsculas y sin tildes para la búsqueda léxica. */
+    searchText: text("searchText").notNull(),
+    tokenCount: integer("tokenCount").notNull(),
+    tsv: tsvector("tsv").generatedAlwaysAs(
+      sql`to_tsvector('spanish'::regconfig, "searchText")`
+    ),
+    /** Desnormalizado para filtrar por propietario antes de ordenar. */
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    documentOrdinalIdx: uniqueIndex("protocol_chunk_documentId_ordinal_idx").on(
+      table.documentId,
+      table.ordinal
+    ),
+    tsvIdx: index("protocol_chunk_tsv_idx").using("gin", table.tsv),
+    userIdx: index("protocol_chunk_userId_idx").on(table.userId),
+  })
+);
+
+export type ProtocolChunk = InferSelectModel<typeof protocolChunk>;
+
+// ---------------------------------------------------------------------------
+// Hojas de sesión de hemodiálisis
+// ---------------------------------------------------------------------------
+
+export type VitalSignReading = {
+  time: string | null;
+  systolic: number | null;
+  diastolic: number | null;
+  heartRate: number | null;
+};
+
+export type SessionEvent = { time: string | null; description: string };
+
+export const sessionRecord = pgTable(
+  "session_record",
+  {
+    alerts: jsonb("alerts").notNull().default(sql`'[]'::jsonb`),
+    bunPostMgDl: real("bunPostMgDl"),
+    bunPreMgDl: real("bunPreMgDl"),
+    calculations: jsonb("calculations").notNull().default(sql`'[]'::jsonb`),
+    chatId: uuid("chatId"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    dialyzer: text("dialyzer"),
+    dryWeightKg: real("dryWeightKg"),
+    durationHours: real("durationHours"),
+    events: jsonb("events")
+      .$type<SessionEvent[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    fluidsAdministeredMl: real("fluidsAdministeredMl"),
+    heparin: text("heparin"),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    machine: text("machine"),
+    missingFields: jsonb("missingFields")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    notes: text("notes"),
+    /** Iniciales o seudónimo; nunca el nombre completo. */
+    patientAlias: varchar("patientAlias", { length: 24 }),
+    postWeightKg: real("postWeightKg"),
+    previousPostWeightKg: real("previousPostWeightKg"),
+    preWeightKg: real("preWeightKg"),
+    sessionDate: date("sessionDate"),
+    /** Notas originales ya redactadas (sin datos personales). */
+    sourceNotes: text("sourceNotes").notNull(),
+    ufAchievedMl: real("ufAchievedMl"),
+    ufGoalMl: real("ufGoalMl"),
+    /** Campos que el modelo propuso pero no aparecían en las notas. */
+    unverifiedFields: jsonb("unverifiedFields")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    vascularAccess: text("vascularAccess"),
+    vitals: jsonb("vitals")
+      .$type<VitalSignReading[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+  },
+  (table) => ({
+    userCreatedIdx: index("session_record_userId_createdAt_idx").on(
+      table.userId,
+      table.createdAt
+    ),
+  })
+);
+
+export type SessionRecord = InferSelectModel<typeof sessionRecord>;

@@ -15,6 +15,20 @@
       "when": 1794680179523,
       "tag": "0001_indices_y_email_unico",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794919111762,
+      "tag": "0002_protocolos_y_hojas_de_sesion",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794919125035,
+      "tag": "0003_pgvector_opcional",
+      "breakpoints": true
     }
   ]
 }
