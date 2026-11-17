@@ -9,11 +9,20 @@
 
 ---
 
-NefroIA is a conversational AI assistant for nursing staff in nephrology and hemodialysis units. This first version provides the technical foundation (authentication, streaming chat, history, file attachments, internationalization and production-ready infrastructure) on top of which the clinical features will be built.
+NefroIA is a conversational AI assistant for nursing staff in nephrology and hemodialysis units: it computes dialysis indicators with verified formulas, answers citing the unit's own protocols and turns session notes into a structured record, with clinical-safety and privacy guardrails.
 
-> NefroIA is a support tool. It does not replace clinical judgment or unit protocols. Do not enter data that identifies patients.
+> NefroIA is a **decision-support** tool: it does not diagnose or prescribe, and it does not replace clinical judgment, unit protocols or medical orders. Do not enter patient-identifying data. The protocols in `docs/protocolos-demo/` are demo documents, not for clinical use.
 
-## Features
+## Clinical features
+
+- **Hemodialysis calculators as AI tools**: URR, spKt/V (Daugirdas 2nd generation), interdialytic weight gain, ultrafiltration rate and fluid balance. Pure, unit-tested functions with zod validation and translated errors, rendered in an accessible card with value, band (color + text label), formula, substitution, reference (KDOQI 2015, Daugirdas 1993, Flythe 2011) and disclaimer.
+- **Unit protocols (RAG)**: `/protocolos` page to upload PDF, Word, Markdown or text; extraction, cleaning, section-aware chunking with page metadata, local (`multilingual-e5-small`) or OpenAI embeddings and hybrid search (pgvector/HNSW or `real[]` + Spanish full-text search) fused with Reciprocal Rank Fusion. The assistant cites `[document, page/section]` with chips that open the source chunk and answers "I don't know" when not grounded. Each user only sees their own documents.
+- **Session record**: the nurse's free-text notes become a structured record (initials, machine, dialyzer, access, weights, BP/HR, UF, heparin, events) via structured output; missing fields stay empty and are listed, and numbers not present in the notes are discarded. Indicators and alerts are computed automatically. `/hojas` page with CSV export and printable view.
+- **Guardrails**: redaction of personal data (Colombian ID numbers, phones, emails, names, dates of birth, medical record numbers) before anything is stored or sent to the model, with a user notice; red-flag detection with immediate escalation advice; decision-support system prompt; persistent disclaimer in es/en.
+
+Design decisions, formulas with references, limitations and the threat model are in [`docs/arquitectura-clinica.md`](docs/arquitectura-clinica.md) (Spanish).
+
+## Platform features
 
 - Streaming chat, per-user history and private/public chats.
 - Spanish (default) and English UI with a visible, cookie-persisted language switcher. The model replies in the user's language.
@@ -26,7 +35,7 @@ NefroIA is a conversational AI assistant for nursing staff in nephrology and hem
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · AI SDK · next-intl · Auth.js · Drizzle ORM + PostgreSQL 16 · Redis 7 · S3 (MinIO locally) · Tailwind CSS 4 + shadcn/ui · Vitest · Playwright · Biome (Ultracite).
+Next.js 16 (App Router) · React 19 · AI SDK · next-intl · Auth.js · Drizzle ORM + PostgreSQL 16 (optional pgvector) · Transformers.js (local embeddings) · Redis 7 · S3 (MinIO locally) · Tailwind CSS 4 + shadcn/ui · Vitest · Playwright · Biome (Ultracite).
 
 ## Architecture
 
@@ -41,6 +50,30 @@ flowchart LR
   A -.->|optional| OA[OpenAI]
   A -.->|optional| GG[Google Gemini]
   A -.->|optional, OTLP| O[OpenTelemetry collector]
+```
+
+### Message flow: guardrails, tools and RAG
+
+```mermaid
+flowchart TB
+  M[Nurse message] --> RD[PII redaction]
+  RD --> RF[Red-flag detection]
+  RF -->|notice + escalation alert| UI[UI]
+  RF -->|redacted text + decision-support prompt| LLM[Language model]
+  LLM -->|tool call| CALC[Calculators<br/>URR · spKt/V · IDWG · UFR · balance]
+  LLM -->|tool call| RAG[buscarProtocolos]
+  LLM -->|tool call| HS[crearHojaSesion]
+  RAG --> V[Vector<br/>pgvector HNSW or real&#91;&#93;]
+  RAG --> L[Lexical<br/>Spanish tsvector]
+  V --> RRF[Reciprocal Rank Fusion<br/>+ relevance threshold]
+  L --> RRF
+  RRF -->|chunks P1..Pn| LLM
+  HS -->|zod structured output| VER[Number grounding check<br/>+ calculations + alerts]
+  VER --> DB[(session_record)]
+  CALC --> UI
+  RRF --> UI
+  VER --> UI
+  LLM -->|answer with citations| UI
 ```
 
 ## Local setup with Docker
@@ -64,8 +97,13 @@ docker compose up -d postgres redis minio minio-init   # supporting services
 cp .env.example .env.local                              # and fill in the values
 pnpm install
 pnpm db:migrate
+pnpm db:seed                                            # demo user and data
 pnpm dev
 ```
+
+### Demo data
+
+`pnpm db:seed` creates (or recreates) the user **demo@nefroia.app** / **NefroIA-demo-2026** (configurable with `DEMO_USER_EMAIL` and `DEMO_USER_PASSWORD`) with the three original demo protocols in `docs/protocolos-demo/` (intradialytic hypotension, vascular access care and pre/post blood sampling) and two fictitious session records. Sign in at `/login` and open `/protocolos` and `/hojas`. Without access to huggingface.co, run the seed and the app with `EMBEDDING_PROVIDER=hash`.
 
 ## Environment variables
 
@@ -81,6 +119,9 @@ All of them are documented in [`.env.example`](.env.example). The main ones:
 | `S3_BUCKET`, `S3_ENDPOINT`, `S3_PUBLIC_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | No* | File storage (*uploads are disabled without it). |
 | `RATE_LIMIT_*`, `AUTH_RATE_LIMIT_*` | No | Message and sign-in attempt limits. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | Enables trace export. |
+| `EMBEDDING_PROVIDER` | No | `local` (e5, default), `openai` or `hash` (tests, offline). |
+| `EMBEDDING_CACHE_DIR` | No | Local embedding model cache. |
+| `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD` | No | Credentials of the `pnpm db:seed` user. |
 
 ## Scripts
 
@@ -91,8 +132,10 @@ All of them are documented in [`.env.example`](.env.example). The main ones:
 | `pnpm check` / `pnpm fix` | Lint and format (Ultracite/Biome). |
 | `pnpm typecheck` | `tsc --noEmit`. |
 | `pnpm test:unit` | Unit tests (Vitest). |
+| `pnpm test:integration` | RAG ingestion + retrieval on real migrations (PGlite + pgvector and, with `INTEGRATION_POSTGRES_URL`, a disposable PostgreSQL). |
 | `pnpm test:e2e` | End-to-end tests (Playwright, mock models). |
 | `pnpm db:generate` / `pnpm db:migrate` | Generate and apply Drizzle migrations. |
+| `pnpm db:seed` | Demo user, protocols and session records. |
 
 ## Deployment
 
