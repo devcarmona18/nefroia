@@ -227,8 +227,6 @@ export const protocolDocument = pgTable(
 
 export type ProtocolDocument = InferSelectModel<typeof protocolDocument>;
 
-export const EMBEDDING_DIMENSIONS = 384;
-
 export const protocolChunk = pgTable(
   "protocol_chunk",
   {

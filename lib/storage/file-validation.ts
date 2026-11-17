@@ -89,3 +89,164 @@ export function sanitizeFilename(name: string, extension: string): string {
     .slice(0, 60);
   return `${base || "archivo"}.${extension}`;
 }
+
+// ---------------------------------------------------------------------------
+// Protocolos de la unidad: PDF, DOCX, Markdown y texto plano
+// ---------------------------------------------------------------------------
+
+export const PROTOCOL_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+/** Límite de tamaño descomprimido de un DOCX (defensa ante "zip bombs"). */
+export const DOCX_MAX_UNCOMPRESSED_BYTES = 60 * 1024 * 1024;
+
+export type ProtocolFileKind = "pdf" | "docx" | "markdown" | "text";
+
+export const PROTOCOL_CONTENT_TYPES: Record<ProtocolFileKind, string> = {
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  markdown: "text/markdown; charset=utf-8",
+  pdf: "application/pdf",
+  text: "text/plain; charset=utf-8",
+};
+
+const PROTOCOL_EXTENSIONS: Record<ProtocolFileKind, string> = {
+  docx: "docx",
+  markdown: "md",
+  pdf: "pdf",
+  text: "txt",
+};
+
+function readUint16(bytes: Uint8Array, offset: number) {
+  return bytes[offset] | (bytes[offset + 1] << 8);
+}
+
+function readUint32(bytes: Uint8Array, offset: number) {
+  return (
+    (bytes[offset] |
+      (bytes[offset + 1] << 8) |
+      (bytes[offset + 2] << 16) |
+      (bytes[offset + 3] << 24)) >>>
+    0
+  );
+}
+
+export type ZipInspection = { names: string[]; uncompressedBytes: number };
+
+/**
+ * Lee el directorio central de un ZIP (sin descomprimir nada) para conocer
+ * los nombres de las entradas y el tamaño descomprimido declarado.
+ */
+export function inspectZip(bytes: Uint8Array): ZipInspection | null {
+  const eocdSignature = 0x06_05_4b_50;
+  const minEocd = 22;
+  const maxComment = 0xff_ff;
+  const start = Math.max(0, bytes.length - minEocd - maxComment);
+  let eocd = -1;
+  for (let i = bytes.length - minEocd; i >= start; i -= 1) {
+    if (readUint32(bytes, i) === eocdSignature) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) {
+    return null;
+  }
+  const entries = readUint16(bytes, eocd + 10);
+  let offset = readUint32(bytes, eocd + 16);
+  const names: string[] = [];
+  let uncompressedBytes = 0;
+  const decoder = new TextDecoder();
+  for (let i = 0; i < entries; i += 1) {
+    if (
+      offset + 46 > bytes.length ||
+      readUint32(bytes, offset) !== 0x02_01_4b_50
+    ) {
+      return null;
+    }
+    uncompressedBytes += readUint32(bytes, offset + 24);
+    const nameLength = readUint16(bytes, offset + 28);
+    const extraLength = readUint16(bytes, offset + 30);
+    const commentLength = readUint16(bytes, offset + 32);
+    names.push(
+      decoder.decode(bytes.subarray(offset + 46, offset + 46 + nameLength))
+    );
+    offset += 46 + nameLength + extraLength + commentLength;
+  }
+  return { names, uncompressedBytes };
+}
+
+/** Texto UTF-8 válido, sin bytes nulos ni exceso de caracteres de control. */
+export function isPlainUtf8Text(bytes: Uint8Array): boolean {
+  let text: string;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return false;
+  }
+  if (text.includes("\u0000")) {
+    return false;
+  }
+  // Caracteres de control (categoría Unicode Cc) distintos de \t, \n y \r.
+  const control =
+    text.match(/\p{Cc}/gu)?.filter((char) => !"\t\n\r".includes(char)).length ??
+    0;
+  return control <= text.length * 0.01;
+}
+
+export type ProtocolUploadValidation =
+  | {
+      ok: true;
+      kind: ProtocolFileKind;
+      contentType: string;
+      extension: string;
+    }
+  | {
+      ok: false;
+      reason: "empty" | "too_large" | "invalid_type" | "unsafe_archive";
+    };
+
+/**
+ * Valida un protocolo por su contenido real. PDF y DOCX se reconocen por
+ * firma; Markdown y texto no tienen firma, así que se exige la extensión
+ * declarada (.md/.markdown/.txt) Y que el contenido sea texto UTF-8 válido.
+ */
+export function validateProtocolUpload(
+  bytes: Uint8Array,
+  filename: string
+): ProtocolUploadValidation {
+  if (bytes.length === 0) {
+    return { ok: false, reason: "empty" };
+  }
+  if (bytes.length > PROTOCOL_UPLOAD_MAX_BYTES) {
+    return { ok: false, reason: "too_large" };
+  }
+  const accept = (kind: ProtocolFileKind): ProtocolUploadValidation => ({
+    contentType: PROTOCOL_CONTENT_TYPES[kind],
+    extension: PROTOCOL_EXTENSIONS[kind],
+    kind,
+    ok: true,
+  });
+
+  if (detectFileType(bytes) === "application/pdf") {
+    return accept("pdf");
+  }
+  // PK\x03\x04: ZIP. Solo se acepta si es un documento de Word.
+  if (startsWith(bytes, [0x50, 0x4b, 0x03, 0x04])) {
+    const zip = inspectZip(bytes);
+    if (
+      !(
+        zip?.names.includes("[Content_Types].xml") &&
+        zip.names.includes("word/document.xml")
+      )
+    ) {
+      return { ok: false, reason: "invalid_type" };
+    }
+    if (zip.uncompressedBytes > DOCX_MAX_UNCOMPRESSED_BYTES) {
+      return { ok: false, reason: "unsafe_archive" };
+    }
+    return accept("docx");
+  }
+  const extension = filename.toLowerCase().split(".").pop() ?? "";
+  if (["md", "markdown", "txt"].includes(extension) && isPlainUtf8Text(bytes)) {
+    return accept(extension === "txt" ? "text" : "markdown");
+  }
+  return { ok: false, reason: "invalid_type" };
+}

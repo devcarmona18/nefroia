@@ -33,8 +33,10 @@
     "db:up": "drizzle-kit up",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "cross-env PLAYWRIGHT=True playwright test",
-    "test": "pnpm test:unit && pnpm test:e2e"
+    "test": "pnpm test:unit && pnpm test:e2e",
+    "db:seed": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.104",
