@@ -28,21 +28,24 @@ const MIGRATIONS = path.join(import.meta.dirname, "../../lib/db/migrations");
 const DEMO = path.join(import.meta.dirname, "../../docs/protocolos-demo");
 const embedder = createHashEmbedder();
 
+type Mode = "pgvector" | "array";
 type Backend = {
   name: string;
-  expectedMode: "pgvector" | "array";
-  setup: () => Promise<{ db: RagDb; close: () => Promise<void> }>;
+  setup: () => Promise<{ db: RagDb; close: () => Promise<void>; mode: Mode }>;
 };
 
 const backends: Backend[] = [
   {
-    expectedMode: "pgvector",
     name: "PGlite + pgvector",
     setup: async () => {
       const client = await PGlite.create({ extensions: { vector } });
       const db = drizzlePglite(client);
       await migratePglite(db, { migrationsFolder: MIGRATIONS });
-      return { close: () => client.close(), db: db as unknown as RagDb };
+      return {
+        close: () => client.close(),
+        db: db as unknown as RagDb,
+        mode: "pgvector",
+      };
     },
   },
 ];
@@ -50,8 +53,7 @@ const backends: Backend[] = [
 const postgresUrl = process.env.INTEGRATION_POSTGRES_URL;
 if (postgresUrl) {
   backends.push({
-    expectedMode: "array",
-    name: "PostgreSQL local (sin pgvector)",
+    name: "PostgreSQL (INTEGRATION_POSTGRES_URL)",
     setup: async () => {
       const client = postgres(postgresUrl, { max: 1, onnotice: () => null });
       // Base de datos de pruebas desechable: se recrea desde cero.
@@ -60,7 +62,16 @@ if (postgresUrl) {
       );
       const db = drizzlePostgres(client);
       await migratePostgres(db, { migrationsFolder: MIGRATIONS });
-      return { close: () => client.end(), db: db as unknown as RagDb };
+      // La migración 0003 activa pgvector solo si el servidor lo ofrece.
+      const [{ available }] = await client<{ available: boolean }[]>`
+        SELECT EXISTS (
+          SELECT 1 FROM pg_available_extensions WHERE name = 'vector'
+        ) AS available`;
+      return {
+        close: () => client.end(),
+        db: db as unknown as RagDb,
+        mode: available ? "pgvector" : "array",
+      };
     },
   });
 }
@@ -111,12 +122,13 @@ async function addDocument(
 describe.each(backends)("RAG de protocolos sobre $name", (backend) => {
   let db: RagDb;
   let close: () => Promise<void>;
+  let expectedMode: Mode;
   let nurseA: string;
   let nurseB: string;
   const docs: Record<string, string> = {};
 
   beforeAll(async () => {
-    ({ db, close } = await backend.setup());
+    ({ db, close, mode: expectedMode } = await backend.setup());
     nurseA = await createUser(db, "a@nefroia.test");
     nurseB = await createUser(db, "b@nefroia.test");
     for (const [key, file, title] of [
@@ -161,7 +173,7 @@ describe.each(backends)("RAG de protocolos sobre $name", (backend) => {
       query: "hipotensión",
       userId: nurseA,
     });
-    expect(result.mode).toBe(backend.expectedMode);
+    expect(result.mode).toBe(expectedMode);
   });
 
   it("guarda fragmentos con metadatos de sección y estado ready", async () => {

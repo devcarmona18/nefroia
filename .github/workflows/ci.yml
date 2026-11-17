@@ -59,6 +59,13 @@ jobs:
       - name: Pruebas unitarias
         run: pnpm test:unit
 
+      - name: Pruebas de integración (RAG con PGlite + pgvector y PostgreSQL)
+        run: |
+          PGPASSWORD=nefroia psql -h localhost -U nefroia -d nefroia -c "CREATE DATABASE nefroia_test"
+          pnpm test:integration
+        env:
+          INTEGRATION_POSTGRES_URL: postgres://nefroia:nefroia@localhost:5432/nefroia_test
+
       - name: Build
         run: pnpm build
 
