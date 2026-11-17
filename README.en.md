@@ -13,6 +13,16 @@ NefroIA is a conversational AI assistant for nursing staff in nephrology and hem
 
 > NefroIA is a **decision-support** tool: it does not diagnose or prescribe, and it does not replace clinical judgment, unit protocols or medical orders. Do not enter patient-identifying data. The protocols in `docs/protocolos-demo/` are demo documents, not for clinical use.
 
+## Screenshots
+
+| Chat | Calculator (spKt/V) |
+| --- | --- |
+| ![Chat home](docs/img/02-chat-inicio.png) | ![spKt/V card](docs/img/03-calculadora.png) |
+| **Answer with protocol citations** | **Protocols and search tester** |
+| ![Protocol citations](docs/img/04-citas.png) | ![Protocols](docs/img/05-protocolos.png) |
+
+Full technical document, in Spanish (architecture, database, formulas, security, deployment): [`docs/NefroIA-Documento-Tecnico.docx`](docs/NefroIA-Documento-Tecnico.docx).
+
 ## Clinical features
 
 - **Hemodialysis calculators as AI tools**: URR, spKt/V (Daugirdas 2nd generation), interdialytic weight gain, ultrafiltration rate and fluid balance. Pure, unit-tested functions with zod validation and translated errors, rendered in an accessible card with value, band (color + text label), formula, substitution, reference (KDOQI 2015, Daugirdas 1993, Flythe 2011) and disclaimer.
