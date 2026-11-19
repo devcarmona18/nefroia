@@ -57,6 +57,9 @@ function startHost(port: number): Promise<Server> {
 let hoja: Server;
 let other: Server;
 
+// Modo serie a nivel de archivo: beforeAll se ejecuta una sola vez (puerto fijo).
+test.describe.configure({ mode: "serial" });
+
 test.beforeAll(async () => {
   hoja = await startHost(E2E_HOJA_DIARIA_PORT);
   other = await startHost(0);
@@ -86,8 +89,9 @@ test.describe("SSO e integración con Hoja Diaria", () => {
 
     await input.fill("Hola desde Hoja Diaria");
     await frame.getByTestId("send-button").click();
+    // Respuesta del modelo simulado (PLAYWRIGHT=True).
     await expect(
-      frame.getByText("This is a mock response for testing.")
+      frame.getByText("Hello! How can I help you today?")
     ).toBeVisible({ timeout: 60_000 });
   });
 
@@ -150,7 +154,7 @@ test.describe("SSO e integración con Hoja Diaria", () => {
       timeout: 60_000,
     });
     await page.goto("/protocolos");
-    await expect(page.getByTestId("protocol-readonly")).toBeVisible();
+    await expect(page.getByTestId("protocol-readonly").first()).toBeVisible();
     await expect(page.getByTestId("protocol-upload-form")).toHaveCount(0);
 
     const upload = await page.request.post("/api/protocolos", {
