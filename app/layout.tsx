@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { isEmbeddedRequest } from "@/lib/sso/embed";
 
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
@@ -69,11 +70,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+  const [locale, messages, embedded] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    isEmbeddedRequest(),
+  ]);
 
   return (
     <html
       className={`${GeistSans.variable} ${GeistMono.variable}`}
+      data-embed={embedded ? "1" : undefined}
       lang={locale}
       suppressHydrationWarning
     >

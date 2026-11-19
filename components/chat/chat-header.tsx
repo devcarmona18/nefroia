@@ -40,7 +40,7 @@ function PureChatHeader({
 
       <Link
         aria-label="NefroIA"
-        className="flex size-8 items-center justify-center rounded-lg md:hidden"
+        className="embed-hide flex size-8 items-center justify-center rounded-lg md:hidden"
         href="/"
       >
         <Logo size={20} />

@@ -540,3 +540,8 @@ textarea:focus-visible {
     box-shadow: none !important;
   }
 }
+
+/* Modo integrado en Hoja Diaria (iframe, embed=1): sin logotipo duplicado. */
+html[data-embed] .embed-hide {
+  display: none !important;
+}

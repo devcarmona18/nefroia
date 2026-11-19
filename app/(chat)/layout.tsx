@@ -7,6 +7,7 @@ import { DataStreamProvider } from "@/components/chat/data-stream-provider";
 import { ChatShell } from "@/components/chat/shell";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ActiveChatProvider } from "@/hooks/use-active-chat";
+import { isEmbeddedRequest } from "@/lib/sso/embed";
 import { auth } from "../(auth)/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -26,8 +27,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 async function SidebarShell({ children }: { children: React.ReactNode }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
-  const isCollapsed = cookieStore.get("sidebar_state")?.value !== "true";
+  const [session, cookieStore, embedded] = await Promise.all([
+    auth(),
+    cookies(),
+    isEmbeddedRequest(),
+  ]);
+  // Integrado en Hoja Diaria: la barra lateral empieza plegada (más espacio).
+  const isCollapsed =
+    embedded || cookieStore.get("sidebar_state")?.value !== "true";
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>

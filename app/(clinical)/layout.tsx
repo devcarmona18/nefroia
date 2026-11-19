@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/chat/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { isEmbeddedRequest } from "@/lib/sso/embed";
 import { auth } from "../(auth)/auth";
 
 /**
@@ -22,8 +23,14 @@ export default function ClinicalLayout({
 }
 
 async function ClinicalShell({ children }: { children: React.ReactNode }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
-  const isCollapsed = cookieStore.get("sidebar_state")?.value !== "true";
+  const [session, cookieStore, embedded] = await Promise.all([
+    auth(),
+    cookies(),
+    isEmbeddedRequest(),
+  ]);
+  // Integrado en Hoja Diaria: la barra lateral empieza plegada (más espacio).
+  const isCollapsed =
+    embedded || cookieStore.get("sidebar_state")?.value !== "true";
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>

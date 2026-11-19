@@ -20,6 +20,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { guestRegex } from "@/lib/constants";
+import { SSO_USER_PREFIX } from "@/lib/sso/config";
 import { LoaderIcon } from "./icons";
 import { toast } from "./toast";
 
@@ -38,6 +39,8 @@ export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, resolvedTheme } = useTheme();
 
   const isGuest = guestRegex.test(data?.user?.email ?? "");
+  // Cuentas vinculadas a Hoja Diaria ("hdr:<usuario>"): se muestra el nombre.
+  const isSso = (user.email ?? "").startsWith(SSO_USER_PREFIX);
   const handleThemeSelect = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
@@ -90,7 +93,11 @@ export function SidebarUserNav({ user }: { user: User }) {
                   }}
                 />
                 <span className="truncate text-[13px]" data-testid="user-email">
-                  {isGuest ? t("guest") : user?.email}
+                  {isGuest
+                    ? t("guest")
+                    : isSso
+                      ? t("ssoUser", { name: user.name ?? "" })
+                      : user?.email}
                 </span>
                 <ChevronUp className="ml-auto size-3.5 text-sidebar-foreground/50" />
               </SidebarMenuButton>
