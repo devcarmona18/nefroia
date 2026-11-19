@@ -5,10 +5,16 @@ import { defineConfig, devices } from "@playwright/test";
  * https://github.com/motdotla/dotenv
  */
 import { config } from "dotenv";
+import { E2E_HOJA_DIARIA_ORIGIN, E2E_SSO_SECRET } from "./tests/sso-env";
 
 config({
   path: ".env.local",
 });
+
+// SSO con Hoja Diaria (tests/e2e/sso-embed.test.ts): el servidor de pruebas
+// hereda estas variables.
+process.env.NEFROIA_SSO_SECRET ??= E2E_SSO_SECRET;
+process.env.HOJA_DIARIA_ORIGIN ??= E2E_HOJA_DIARIA_ORIGIN;
 
 /* Use process.env.PORT by default and fallback to port 3000 */
 const PORT = process.env.PORT || 3000;
