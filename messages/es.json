@@ -85,7 +85,8 @@
     "toggleLight": "Cambiar a modo claro",
     "login": "Inicia sesión en tu cuenta",
     "signOut": "Cerrar sesión",
-    "checkingAuth": "Comprobando el estado de la sesión, inténtalo de nuevo."
+    "checkingAuth": "Comprobando el estado de la sesión, inténtalo de nuevo.",
+    "ssoUser": "{name} · Hoja Diaria"
   },
   "visibility": {
     "private": "Privado",
@@ -145,7 +146,8 @@
       "invalid_type": "Tipo de archivo no permitido: solo imágenes (JPG, PNG, WebP, GIF) y PDF.",
       "no_file": "No se recibió ningún archivo.",
       "invalid_request": "Solicitud no válida.",
-      "upload_failed": "Error al subir el archivo."
+      "upload_failed": "Error al subir el archivo.",
+      "forbidden": "El modo demo de Hoja Diaria no permite adjuntar archivos."
     }
   },
   "models": {
@@ -470,7 +472,8 @@
       "extraction_failed": "No se pudo leer el documento.",
       "empty_text": "El documento no tiene texto extraíble (¿PDF escaneado?).",
       "embedding_failed": "No se pudieron generar los embeddings (¿modelo no disponible?).",
-      "storage_failed": "Error al guardar el índice."
+      "storage_failed": "Error al guardar el índice.",
+      "forbidden": "El modo demo de Hoja Diaria es de solo lectura: no puedes subir ni borrar protocolos."
     },
     "search": {
       "title": "Probar la búsqueda",

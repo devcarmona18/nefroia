@@ -1,5 +1,6 @@
 import { after, NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
+import { getEntitlements } from "@/lib/ai/entitlements";
 import {
   createProtocol,
   ingestProtocol,
@@ -37,6 +38,10 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return errorResponse("unauthorized", 401);
+  }
+  // Modo demo de Hoja Diaria: solo lectura de protocolos.
+  if (!getEntitlements(session.user.type).canManageProtocols) {
+    return errorResponse("forbidden", 403);
   }
 
   const contentLength = Number(request.headers.get("content-length") ?? 0);

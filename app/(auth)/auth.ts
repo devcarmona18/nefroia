@@ -4,9 +4,37 @@ import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import { DUMMY_PASSWORD } from "@/lib/constants";
 import { createGuestUser, getUser } from "@/lib/db/queries";
+import {
+  crossSiteCookieOptions,
+  SSO_SESSION_SECONDS,
+  SSO_USER_PREFIX,
+} from "@/lib/sso/config";
+import { authenticateSsoToken } from "@/lib/sso/server";
 import { authConfig } from "./auth.config";
 
-export type UserType = "guest" | "regular";
+/**
+ * - guest / regular: cuentas propias de NefroIA.
+ * - hdr: usuario administrador de Hoja Diaria Renal (SSO).
+ * - hdr-demo: visitante en modo demo de Hoja Diaria (límites de invitado,
+ *   sin subir protocolos ni archivos).
+ */
+export type UserType = "guest" | "regular" | "hdr" | "hdr-demo";
+
+export function isSsoUserType(type: UserType | undefined) {
+  return type === "hdr" || type === "hdr-demo";
+}
+
+// Con el modo integrado (iframe en Hoja Diaria) las cookies de Auth.js deben
+// viajar en contexto de terceros: SameSite=None; Secure. El nombre no cambia.
+const sameSiteOptions = crossSiteCookieOptions();
+const embeddedCookies =
+  sameSiteOptions.sameSite === "none"
+    ? {
+        callbackUrl: { options: sameSiteOptions },
+        csrfToken: { options: sameSiteOptions },
+        sessionToken: { options: sameSiteOptions },
+      }
+    : undefined;
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -26,6 +54,8 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     id: string;
+    /** Fin (segundos epoch) de una sesión iniciada por SSO. */
+    ssoExp?: number;
     type: UserType;
   }
 }
@@ -37,11 +67,23 @@ export const {
   signOut,
 } = NextAuth({
   ...authConfig,
+  ...(embeddedCookies ? { cookies: embeddedCookies } : {}),
   callbacks: {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
+        token.ssoExp = isSsoUserType(user.type)
+          ? Math.floor(Date.now() / 1000) + SSO_SESSION_SECONDS
+          : undefined;
+      }
+
+      // Las sesiones de SSO duran lo mismo que la de Hoja Diaria (8 h).
+      if (
+        isSsoUserType(token.type) &&
+        (!token.ssoExp || token.ssoExp < Date.now() / 1000)
+      ) {
+        return null;
       }
 
       return token;
@@ -60,6 +102,11 @@ export const {
       async authorize(credentials) {
         const email = String(credentials.email ?? "");
         const password = String(credentials.password ?? "");
+        // Las cuentas vinculadas a Hoja Diaria solo entran por SSO.
+        if (email.trim().toLowerCase().startsWith(SSO_USER_PREFIX)) {
+          await compare(password, DUMMY_PASSWORD);
+          return null;
+        }
         const users = await getUser(email);
 
         if (users.length === 0) {
@@ -94,6 +141,23 @@ export const {
       },
       credentials: {},
       id: "guest",
+    }),
+    // SSO desde Hoja Diaria Renal: token HS256 de un solo uso (ver /sso).
+    Credentials({
+      async authorize(credentials) {
+        const result = await authenticateSsoToken(credentials.token);
+        if (!result.ok) {
+          return null;
+        }
+        return {
+          email: result.user.email,
+          id: result.user.id,
+          name: result.user.name,
+          type: result.claims.role === "demo" ? "hdr-demo" : "hdr",
+        };
+      },
+      credentials: { token: {} },
+      id: "hoja-diaria",
     }),
   ],
 });

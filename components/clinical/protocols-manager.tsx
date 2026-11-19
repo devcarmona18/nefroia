@@ -144,9 +144,11 @@ function UploadForm({ onUploaded }: { onUploaded: () => void }) {
 function DocumentRow({
   doc,
   onDeleted,
+  canManage,
 }: {
   doc: SerializedDocument;
   onDeleted: () => void;
+  canManage: boolean;
 }) {
   const t = useTranslations("protocols");
   const format = useFormatter();
@@ -212,14 +214,16 @@ function DocumentRow({
         )}
         {t(`status.${doc.status}`)}
       </span>
-      <Button
-        aria-label={`${t("list.delete")}: ${doc.title}`}
-        onClick={handleDelete}
-        size="icon"
-        variant="ghost"
-      >
-        <TrashIcon className="size-4" />
-      </Button>
+      {canManage ? (
+        <Button
+          aria-label={`${t("list.delete")}: ${doc.title}`}
+          onClick={handleDelete}
+          size="icon"
+          variant="ghost"
+        >
+          <TrashIcon className="size-4" />
+        </Button>
+      ) : null}
     </li>
   );
 }
@@ -351,8 +355,11 @@ function SearchTester() {
 
 export function ProtocolsManager({
   initialDocuments,
+  canManage = true,
 }: {
   initialDocuments: SerializedDocument[];
+  /** `false` en el modo demo de Hoja Diaria (solo lectura). */
+  canManage?: boolean;
 }) {
   const t = useTranslations("protocols");
   const { data, mutate } = useSWR(API, listFetcher, {
@@ -377,7 +384,16 @@ export function ProtocolsManager({
 
   return (
     <div className="flex flex-col gap-6">
-      <UploadForm onUploaded={refresh} />
+      {canManage ? (
+        <UploadForm onUploaded={refresh} />
+      ) : (
+        <p
+          className="rounded-lg border bg-muted/40 px-4 py-3 text-muted-foreground text-sm"
+          data-testid="protocol-readonly"
+        >
+          {t("errors.forbidden")}
+        </p>
+      )}
       <section aria-label={t("title")}>
         {documents.length === 0 ? (
           <p className="rounded-lg border border-dashed px-4 py-6 text-center text-muted-foreground text-sm">
@@ -386,7 +402,12 @@ export function ProtocolsManager({
         ) : (
           <ul className="space-y-2" data-testid="protocol-list">
             {documents.map((doc) => (
-              <DocumentRow doc={doc} key={doc.id} onDeleted={refresh} />
+              <DocumentRow
+                canManage={canManage}
+                doc={doc}
+                key={doc.id}
+                onDeleted={refresh}
+              />
             ))}
           </ul>
         )}

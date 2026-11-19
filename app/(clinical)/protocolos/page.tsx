@@ -3,6 +3,7 @@ import { auth } from "@/app/(auth)/auth";
 import { PageHeader } from "@/components/clinical/page-header";
 import { ProtocolsManager } from "@/components/clinical/protocols-manager";
 import { ClinicalDisclaimer } from "@/components/clinical/safety-notices";
+import { getEntitlements } from "@/lib/ai/entitlements";
 import { listProtocols } from "@/lib/protocols/service";
 
 export async function generateMetadata() {
@@ -24,6 +25,11 @@ export default async function ProtocolsPage() {
       <PageHeader description={t("description")} title={t("title")} />
       <ClinicalDisclaimer variant="banner" />
       <ProtocolsManager
+        canManage={
+          session?.user
+            ? getEntitlements(session.user.type).canManageProtocols
+            : true
+        }
         initialDocuments={JSON.parse(JSON.stringify(documents))}
       />
     </div>

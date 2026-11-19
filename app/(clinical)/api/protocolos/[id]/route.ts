@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
+import { getEntitlements } from "@/lib/ai/entitlements";
 import { deleteProtocol } from "@/lib/protocols/service";
 
 export async function DELETE(
@@ -10,6 +11,9 @@ export async function DELETE(
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ code: "unauthorized" }, { status: 401 });
+  }
+  if (!getEntitlements(session.user.type).canManageProtocols) {
+    return NextResponse.json({ code: "forbidden" }, { status: 403 });
   }
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) {

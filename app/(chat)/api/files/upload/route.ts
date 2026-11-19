@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
+import { getEntitlements } from "@/lib/ai/entitlements";
 import {
   MAX_UPLOAD_BYTES,
   sanitizeFilename,
@@ -20,6 +21,10 @@ export async function POST(request: Request) {
 
   if (!session?.user?.id) {
     return errorResponse("unauthorized", 401);
+  }
+
+  if (!getEntitlements(session.user.type).canUploadFiles) {
+    return errorResponse("forbidden", 403);
   }
 
   if (!isStorageConfigured()) {

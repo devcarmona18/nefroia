@@ -85,7 +85,8 @@
     "toggleLight": "Switch to light mode",
     "login": "Sign in to your account",
     "signOut": "Sign out",
-    "checkingAuth": "Checking authentication status, please try again."
+    "checkingAuth": "Checking authentication status, please try again.",
+    "ssoUser": "{name} · Hoja Diaria"
   },
   "visibility": {
     "private": "Private",
@@ -145,7 +146,8 @@
       "invalid_type": "File type not allowed: only images (JPG, PNG, WebP, GIF) and PDF.",
       "no_file": "No file was received.",
       "invalid_request": "Invalid request.",
-      "upload_failed": "File upload failed."
+      "upload_failed": "File upload failed.",
+      "forbidden": "Hoja Diaria demo mode does not allow attachments."
     }
   },
   "models": {
@@ -470,7 +472,8 @@
       "extraction_failed": "The document could not be read.",
       "empty_text": "The document has no extractable text (scanned PDF?).",
       "embedding_failed": "Embeddings could not be generated (model unavailable?).",
-      "storage_failed": "Error saving the index."
+      "storage_failed": "Error saving the index.",
+      "forbidden": "Hoja Diaria demo mode is read-only: you cannot upload or delete protocols."
     },
     "search": {
       "title": "Try the search",
