@@ -40,6 +40,7 @@ Las decisiones de diseño, fórmulas con referencias, limitaciones y el análisi
 - Archivos adjuntos (imágenes y PDF, máx. 5 MB) en un bucket S3 privado, con validación por firma real del archivo y URLs prefirmadas.
 - Documentos y artefactos (texto, código, hojas de cálculo, imágenes) generados por el asistente.
 - Registro, inicio de sesión y modo invitado, con límite de intentos y límite configurable de mensajes por usuario.
+- **Integración con Hoja Diaria Renal**: inicio de sesión único con un token HS256 de un solo uso (≤ 2 min) y modo integrado en iframe (`/sso?token=…&embed=1`), enmarcable solo desde `HOJA_DIARIA_ORIGIN`. Ver [`docs/integracion-nefroia.md`](docs/integracion-nefroia.md).
 - Streams reanudables con Redis, telemetría OpenTelemetry opcional.
 - Tema claro/oscuro con la paleta de marca.
 
@@ -144,6 +145,9 @@ Todas están documentadas en [`.env.example`](.env.example). Las principales:
 | `EMBEDDING_PROVIDER` | No | `local` (e5, por defecto), `openai` o `hash` (pruebas, sin red). |
 | `EMBEDDING_CACHE_DIR` | No | Caché del modelo de embeddings local. |
 | `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD` | No | Credenciales del usuario de `pnpm db:seed`. |
+| `NEFROIA_SSO_SECRET` | No | Secreto compartido con Hoja Diaria (≥ 32 caracteres). Sin él, el SSO rechaza todo. |
+| `HOJA_DIARIA_ORIGIN` | No | Único origen que puede enmarcar NefroIA (CSP `frame-ancestors`); activa cookies `SameSite=None; Secure`. |
+| `RATE_LIMIT_SSO_DEMO_MESSAGES_PER_HOUR` | No | Mensajes/hora del rol demo de Hoja Diaria (5). |
 
 ## Scripts
 
