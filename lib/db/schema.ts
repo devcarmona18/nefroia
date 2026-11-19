@@ -344,3 +344,19 @@ export const sessionRecord = pgTable(
 );
 
 export type SessionRecord = InferSelectModel<typeof sessionRecord>;
+
+/**
+ * Identificadores (`jti`) de tokens de SSO de Hoja Diaria ya usados: impiden
+ * reutilizar un token. Las filas caducan con el token (`expiresAt`) y se
+ * purgan en cada uso.
+ */
+export const ssoTokenUse = pgTable(
+  "sso_token_use",
+  {
+    expiresAt: timestamp("expiresAt", { withTimezone: true }).notNull(),
+    jti: varchar("jti", { length: 128 }).primaryKey().notNull(),
+  },
+  (table) => ({
+    expiresIdx: index("sso_token_use_expiresAt_idx").on(table.expiresAt),
+  })
+);

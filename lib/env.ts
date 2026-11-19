@@ -25,6 +25,18 @@ export function validateEnv() {
     );
   }
 
+  const ssoSecret = process.env.NEFROIA_SSO_SECRET?.trim() ?? "";
+  if (ssoSecret && ssoSecret.length < 32) {
+    problems.push(
+      "NEFROIA_SSO_SECRET tiene menos de 32 caracteres: el SSO con Hoja Diaria queda DESACTIVADO."
+    );
+  }
+  if (process.env.HOJA_DIARIA_ORIGIN && !ssoSecret) {
+    problems.push(
+      "HOJA_DIARIA_ORIGIN sin NEFROIA_SSO_SECRET: el modo integrado queda desactivado."
+    );
+  }
+
   for (const problem of problems) {
     console.warn(`[nefroia] Configuración: ${problem}`);
   }

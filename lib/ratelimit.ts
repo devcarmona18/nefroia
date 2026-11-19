@@ -33,7 +33,8 @@ export function resetMemoryRateLimits() {
 
 let client: ReturnType<typeof createClient> | null = null;
 
-function getRedis() {
+/** Cliente Redis compartido (o `null` sin REDIS_URL / si falló la conexión). */
+export function getRedis() {
   if (!client && process.env.REDIS_URL) {
     client = createClient({ url: process.env.REDIS_URL });
     client.on("error", () => undefined);

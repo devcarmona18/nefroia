@@ -36,6 +36,13 @@
       "when": 1794923707737,
       "tag": "0004_marcas_de_tiempo_con_zona",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795010636301,
+      "tag": "0005_sso_hoja_diaria",
+      "breakpoints": true
     }
   ]
 }
